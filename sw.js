@@ -8,8 +8,8 @@
 
    ВАЖНО: менять номер версии ниже при каждой правке приложения.
    ================================================================ */
-const CACHE = 'well-calc-v2';
-const FILES = ['index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+const CACHE = 'well-calc-v3';
+const FILES = ['index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-1024.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
