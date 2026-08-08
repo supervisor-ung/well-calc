@@ -211,6 +211,39 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
 #tip b{color:var(--yellow);font-weight:700;display:block;margin-bottom:5px;font-size:10.5px;
   letter-spacing:.1em;text-transform:uppercase}
 
+/* ---------- опрос по прихватам ---------- */
+.qgroup{margin-bottom:16px}
+.qlabel{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.chips{display:flex;gap:9px;flex-wrap:wrap}
+.chip{background:linear-gradient(160deg,#22262C 0%,#181B20 100%);border:var(--edge);color:var(--text);
+  padding:10px 15px;border-radius:14px;cursor:pointer;font-size:12.5px;font-weight:600;
+  box-shadow:5px 5px 11px var(--sh-d),-5px -5px 11px var(--sh-l);transition:.14s}
+.chip:active{box-shadow:inset 4px 4px 8px var(--sh-d),inset -4px -4px 8px var(--sh-l)}
+.chip.on{background:linear-gradient(145deg,var(--yellow),var(--yellow-2));color:#141414;border-color:transparent;
+  box-shadow:0 5px 15px rgba(224,154,16,.3)}
+.stucktype{border:1px solid rgba(255,199,44,.4);border-radius:17px;padding:16px 18px;margin-top:6px;
+  background:linear-gradient(160deg,rgba(255,199,44,.16) 0%,rgba(255,159,28,.05) 55%,#191B20 100%);
+  box-shadow:0 0 26px rgba(224,154,16,.14)}
+.stucktype .t{font-family:"Arial Narrow",Arial,sans-serif;font-size:20px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:#FFD75E;line-height:1.2}
+.stucktype .d{color:#F0D79A;font-size:12.5px;margin-top:6px}
+.stepbox{border-bottom:1px solid var(--line);padding:12px 0}
+.stepbox:last-child{border-bottom:0}
+.stepbox .sh{display:flex;gap:11px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.stepbox .sn{width:26px;height:26px;flex:0 0 26px;border-radius:50%;color:var(--yellow);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+  background:var(--panel);box-shadow:3px 3px 7px var(--sh-d),-3px -3px 7px var(--sh-l)}
+.stepbox .tm{color:var(--yellow);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid rgba(255,199,44,.35);border-radius:9px;padding:3px 9px}
+.stepbox .tx{font-size:13.5px;line-height:1.6}
+.stepbox .tx b{color:#FFD75E}
+.stepbox .alt{margin-top:8px;padding-left:12px;border-left:2px solid rgba(255,199,44,.35);font-size:13px}
+.stepbox .alt i{color:var(--yellow);font-style:normal;font-weight:700}
+.stucklayout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media(max-width:900px){.stucklayout{grid-template-columns:1fr}}
+#stuckPic svg{width:100%;height:auto;border-radius:16px;position:sticky;top:12px}
+.piccap{color:var(--muted);font-size:11.5px;margin-top:8px;line-height:1.5}
+.piccap b{color:var(--yellow)}
 /* ---------- шаги методики ---------- */
 .mudsteps div{display:flex;gap:11px;align-items:flex-start;padding:8px 0;
   border-bottom:1px solid var(--line);font-size:13px}
@@ -306,7 +339,7 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
   </svg>
   <div>
     <h1>Расчёт объёмов скважины</h1>
-    <div class="sub">Промывка · продавка · долив · вытеснение · v1.2</div>
+    <div class="sub">Промывка · продавка · долив · вытеснение · v1.8</div>
   </div>
   <div class="spacer"></div>
   <div class="hbtns">
@@ -327,6 +360,7 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
   <button data-tab="hydro">Гидравлика</button>
   <button data-tab="mud">Параметры раствора</button>
   <button data-tab="press">Опрессовка колонны</button>
+  <button data-tab="stuck">Прихваты</button>
   <button data-tab="drill">Бурение и НПВ</button>
   <button data-tab="ref">Справочник</button>
 </nav>
@@ -839,6 +873,121 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
   
 </section>
 
+<section class="tab" id="tab-stuck">
+
+  <div class="panel">
+    <h2>Определение типа прихвата</h2>
+    <div class="body">
+      <p class="hint" style="margin:0 0 14px">Ответьте на четыре вопроса. Баллы суммируются по столбцам —
+      столбец с наибольшей суммой указывает механизм прихвата в вашем случае.</p>
+
+      <div class="qgroup">
+        <div class="qlabel">1. Куда перемещалась бурильная колонна непосредственно перед прихватом</div>
+        <div class="chips" id="q1">
+          <button class="chip" data-v="up">Вверх</button>
+          <button class="chip" data-v="down">Вниз</button>
+          <button class="chip" data-v="none">Без движения</button>
+        </div>
+      </div>
+
+      <div class="qgroup">
+        <div class="qlabel">2. Перемещается ли колонна вниз после прихвата</div>
+        <div class="chips" id="q2">
+          <button class="chip" data-v="free">Вниз свободно</button>
+          <button class="chip" data-v="hard">Вниз с трудом</button>
+          <button class="chip" data-v="no">Не идёт вниз</button>
+        </div>
+      </div>
+
+      <div class="qgroup">
+        <div class="qlabel">3. Вращается ли колонна после возникновения прихвата</div>
+        <div class="chips" id="q3">
+          <button class="chip" data-v="free">Свободное вращение</button>
+          <button class="chip" data-v="hard">Затруднённое вращение</button>
+          <button class="chip" data-v="no">Вращение невозможно</button>
+        </div>
+      </div>
+
+      <div class="qgroup">
+        <div class="qlabel">4. Какой характер циркуляции после прихвата</div>
+        <div class="chips" id="q4">
+          <button class="chip" data-v="free">Свободная циркуляция</button>
+          <button class="chip" data-v="part">Неполная циркуляция</button>
+          <button class="chip" data-v="no">Циркуляция отсутствует</button>
+        </div>
+      </div>
+
+      <div class="tscroll" style="margin-bottom:14px">
+        <table id="scoreTbl" style="min-width:420px">
+          <thead><tr><th style="min-width:150px">Вопрос — ваш ответ</th>
+            <th>Прихват шламом<br>или обвалившейся породой</th>
+            <th>Дифференциальный<br>прихват</th>
+            <th>Заклинивание на участке<br>сложной геометрии</th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><td>Сумма баллов</td>
+            <td class="calc" id="sc1">0</td><td class="calc" id="sc2">0</td><td class="calc" id="sc3">0</td></tr></tfoot>
+        </table>
+      </div>
+
+      <div id="stuckRes"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="stuckActions" style="display:none">
+    <h2 id="stuckTitle">Порядок действий</h2>
+    <div class="body">
+      <div id="stuckWarn"></div>
+      <div class="stucklayout">
+        <div id="stuckSteps"></div>
+        <div><div id="stuckPic"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Ограничения по нагрузкам и моменту</h2>
+    <div class="body">
+      <p class="hint" style="color:var(--text);font-size:13px;margin:0 0 8px">
+        <b style="display:inline;color:var(--yellow)">¹ Процедура доведения крутящего момента</b></p>
+      <div class="mudsteps">
+        <div><b>1</b> При собственном весе колонны приложить максимально допустимый² крутящий момент.</div>
+        <div><b>2</b> Разгрузить колонну, создавая максимально допустимую осевую сжимающую нагрузку⁴, с последующей натяжкой колонны до собственного веса; повторить 2–3 раза, не снимая крутящего момента.</div>
+        <div><b>3</b> При снижении значения крутящего момента на устье производится повторение п. 2.</div>
+        <div><b>4</b> Прекращение снижения значения момента на устье означает, что крутящий момент доведён до места прихвата.</div>
+      </div>
+      <p class="hint" style="font-size:12.5px;margin-top:12px">
+        <b style="display:inline;color:var(--yellow)">² Максимально допустимый крутящий момент</b> — момент свинчивания на самое слабое соединение в бурильной колонне.</p>
+      <p class="hint" style="font-size:12.5px">
+        <b style="display:inline;color:var(--yellow)">³ Максимально допустимая растягивающая нагрузка</b> ограничена пределом текучести с учётом коэффициента запаса прочности (КЗП) 1,5.</p>
+      <p class="hint" style="font-size:12.5px">
+        <b style="display:inline;color:var(--yellow)">⁴ Максимально допустимая осевая сжимающая нагрузка</b> не должна превышать максимально допустимого значения, при котором напряжение достигает предела текучести материала для элементов наименьшей группы прочности в составе бурильной колонны с учётом её класса износа и прочностных характеристик, а также устойчивости прямолинейной формы равновесия бурильной колонны.</p>
+      <div class="warn err" style="margin-top:12px">Решение по увеличению растягивающей нагрузки до 80 % от предела текучести материала бурильных труб, с учётом присвоенного класса износа бурильного инструмента, принимает мастер по сложным работам (аварийный мастер) или главный инженер подрядчика по бурению (УБР, экспедиции, разведки).</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Записать обстановку
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="copyStuck()">Скопировать</button>
+      <button class="btn sm" onclick="nowStuck()">Время сейчас</button>
+    </h2>
+    <div class="body">
+      <div class="grid4">
+        <label class="f"><span>Время прихвата</span><input id="st_time" oninput="0"></label>
+        <label class="f"><span>Глубина инструмента, м</span><input id="st_md" inputmode="decimal"></label>
+        <label class="f"><span>Глубина забоя, м</span><input id="st_zab" inputmode="decimal"></label>
+        <label class="f"><span>Собственный вес, тс</span><input id="st_sv" inputmode="decimal"></label>
+        <label class="f"><span>Вес на крюке после, тс</span><input id="st_w2" inputmode="decimal"></label>
+        <label class="f"><span>Давление, кгс/см²</span><input id="st_p" inputmode="decimal"></label>
+        <label class="f"><span>Подача, л/с</span><input id="st_q" inputmode="decimal"></label>
+        <label class="f"><span>Момент на устье, кН·м</span><input id="st_m" inputmode="decimal"></label>
+      </div>
+      <div id="st_copy"></div>
+      <p class="hint">Эти данные потребуются при расчёте места прихвата, для доклада и при разборе. Кнопка «Скопировать» кладёт их в буфер обмена одной строкой.</p>
+    </div>
+  </div>
+</section>
+
 <section class="tab" id="tab-drill">
   <div class="grid2">
     
@@ -1027,6 +1176,7 @@ const TABICONS={
   mud:'<path d="M10 3h4"/><path d="M10.8 3v6.2L6.4 17.4A2.4 2.4 0 0 0 8.5 21h7a2.4 2.4 0 0 0 2.1-3.6l-4.4-8.2V3"/><path d="M8.2 15.4h7.6"/>',
   press:'<rect x="6" y="4" width="12" height="16" rx="2.4"/><path d="M12 8.4v7.2"/><path d="M9.4 11l2.6-2.6L14.6 11"/>',
   drill:'<path d="M5 20h14"/><path d="M12 3 6.6 20"/><path d="M12 3l5.4 17"/><path d="M8.6 12.6h6.8"/><path d="M12 3v17"/>',
+  stuck:'<path d="M12 3.6 3.4 19.2h17.2z"/><path d="M12 9.6v4.4"/><path d="M12 16.6v.6"/>',
   ref:'<path d="M4 5.2A2.2 2.2 0 0 1 6.2 3H11v18H6.2A2.2 2.2 0 0 0 4 18.8z"/><path d="M20 5.2A2.2 2.2 0 0 0 17.8 3H13v18h4.8A2.2 2.2 0 0 1 20 18.8z"/>'
 };
 function setNav(v){
@@ -1568,6 +1718,284 @@ function validate(d){
   if(box)box.innerHTML=errs.length?'<div class="warn err">Проверьте данные: '+[...new Set(errs)].join('; ')+'. Печать заблокирована до исправления.</div>':'';
 }
 
+/* ======== прихваты ======== */
+/* таблица баллов: [шлам, дифференциальный, заклинка] */
+const SCORE={
+  q1:{label:'1. Перемещение колонны перед прихватом',
+      opt:{up:['Вверх',[2,0,2]],down:['Вниз',[1,0,2]],none:['Без движения',[2,2,0]]}},
+  q2:{label:'2. Перемещение вниз после прихвата',
+      opt:{free:['Вниз свободно',[0,0,2]],hard:['Вниз с трудом',[1,0,2]],no:['Не идёт вниз',[0,0,0]]}},
+  q3:{label:'3. Вращение после прихвата',
+      opt:{free:['Свободное вращение',[0,0,2]],hard:['Затруднённое вращение',[2,0,2]],no:['Вращение невозможно',[0,0,0]]}},
+  q4:{label:'4. Характер циркуляции после прихвата',
+      opt:{free:['Свободная циркуляция',[0,2,2]],part:['Неполная циркуляция',[2,0,0]],no:['Циркуляция отсутствует',[2,0,0]]}}
+};
+const STUCK={q1:'',q2:'',q3:'',q4:''};
+function initStuck(){
+  ['q1','q2','q3','q4'].forEach(id=>{
+    const box=$(id); if(!box)return;
+    const key=id;
+    box.querySelectorAll('.chip').forEach(b=>{
+      b.onclick=()=>{
+        box.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on');STUCK[key]=b.dataset.v;calcStuck();
+      };
+    });
+  });
+  calcStuck();
+}
+function stepHTML(n,time,text,alts){
+  let h='<div class="stepbox"><div class="sh"><div class="sn">'+n+'</div>'+
+    (time?'<div class="tm">'+time+'</div>':'')+'</div><div class="tx">'+text+'</div>';
+  (alts||[]).forEach(a=>{h+='<div class="alt"><i>'+a[0]+'</i> — '+a[1]+'</div>';});
+  return h+'</div>';
+}
+function stuckPic(type){
+  const BG='#141518', ROCK='#2B2718', ROCK2='#26221A', DOT='#4A4230',
+        MUD='#2C556E', MUD2='#3E7196', CAKE='#B08B3A', STEEL='#A8B0B8', STEEL2='#6E767E',
+        TX='#E9ECEF', MU='#9AA2AB', AC='#FFC72C', RED='#FF6B6E', SOFT='#3A3A3A';
+  let s='';
+
+  if(type==='diff'){
+    /* поперечный разрез: труба прижата к корке, перепад давления */
+    s='<svg viewBox="0 0 340 330" xmlns="http://www.w3.org/2000/svg">'+
+      '<rect width="340" height="330" fill="'+BG+'"/>'+
+      '<rect x="10" y="10" width="320" height="310" rx="10" fill="'+ROCK+'"/>';
+    for(let r=0;r<11;r++)for(let c=0;c<13;c++){
+      const x=22+c*25+(r%2?11:0), y=24+r*28;
+      s+='<circle cx="'+x+'" cy="'+y+'" r="2.2" fill="'+DOT+'"/>';
+    }
+    const cx=190, cy=168, Rh=112;
+    s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+Rh+'" fill="'+MUD+'"/>';
+    s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+Rh+'" fill="none" stroke="'+CAKE+'" stroke-width="9"/>';
+    s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(Rh+6)+'" fill="none" stroke="#4A3C1E" stroke-width="3"/>';
+    /* труба, смещённая влево — прижата */
+    const px=110, pr=62;
+    s+='<circle cx="'+px+'" cy="'+cy+'" r="'+pr+'" fill="'+STEEL+'"/>';
+    s+='<circle cx="'+px+'" cy="'+cy+'" r="'+pr+'" fill="none" stroke="'+STEEL2+'" stroke-width="3"/>';
+    s+='<circle cx="'+px+'" cy="'+cy+'" r="26" fill="'+BG+'" stroke="'+STEEL2+'" stroke-width="2"/>';
+    /* изолированная зона контакта */
+    s+='<path d="M'+(px-pr-2)+' '+(cy-40)+' a 62 62 0 0 0 0 80 l -12 -6 a 70 70 0 0 1 0 -68 z" fill="'+RED+'" opacity=".85">'+
+       '<animate attributeName="opacity" values=".35;.95;.35" dur="2s" repeatCount="indefinite"/></path>';
+    /* давление бурового раствора — стрелки справа внутрь */
+    for(let k=0;k<3;k++){
+      const y=cy-46+k*46;
+      s+='<line x1="'+(cx+96)+'" y1="'+y+'" x2="'+(px+pr+16)+'" y2="'+y+'" stroke="'+MUD2+'" stroke-width="2.4" stroke-dasharray="8 6">'+
+         '<animate attributeName="stroke-dashoffset" values="28;0" dur="1.5s" repeatCount="indefinite"/></line>'+
+         '<polygon points="'+(px+pr+8)+','+y+' '+(px+pr+20)+','+(y-6)+' '+(px+pr+20)+','+(y+6)+'" fill="'+MUD2+'"/>';
+    }
+    /* пластовое давление — стрелки слева на трубу */
+    for(let k=0;k<3;k++){
+      const y=cy-40+k*40;
+      s+='<polygon points="'+(px-pr-6)+','+y+' '+(px-pr-20)+','+(y-6)+' '+(px-pr-20)+','+(y+6)+'" fill="'+RED+'"/>'+
+         '<line x1="'+(px-pr-46)+'" y1="'+y+'" x2="'+(px-pr-20)+'" y2="'+y+'" stroke="'+RED+'" stroke-width="2.2"/>';
+    }
+    s+='<text x="16" y="24" fill="'+RED+'" font-size="11">Пластовое давление</text>';
+    s+='<text x="330" y="318" text-anchor="end" fill="'+MUD2+'" font-size="11">Давление бурового раствора</text>';
+    s+='<text x="330" y="26" text-anchor="end" fill="'+CAKE+'" font-size="11">Фильтрационная корка</text>';
+    s+='<line x1="286" y1="32" x2="'+(cx+Rh-6)+'" y2="'+(cy-72)+'" stroke="'+CAKE+'" stroke-width="1.4"/>';
+    s+='<text x="16" y="318" fill="'+RED+'" font-size="11">Изолированная зона</text>';
+    s+='<line x1="70" y1="306" x2="'+(px-pr+4)+'" y2="'+(cy+40)+'" stroke="'+RED+'" stroke-width="1.4"/>';
+  }
+
+  if(type==='shlam'){
+    /* вертикальный разрез: обвал породы и шлам вокруг КНБК */
+    s='<svg viewBox="0 0 340 420" xmlns="http://www.w3.org/2000/svg">'+
+      '<rect width="340" height="420" fill="'+BG+'"/>'+
+      '<rect x="10" y="10" width="320" height="400" rx="10" fill="'+ROCK2+'"/>'+
+      '<rect x="10" y="150" width="320" height="120" fill="#3A2A24"/>'+
+      '<text x="322" y="168" text-anchor="end" fill="#B08070" font-size="10.5">неустойчивая порода</text>';
+    for(let r=0;r<7;r++)for(let c=0;c<12;c++){
+      const x=24+c*26+(r%2?12:0), y=26+r*18;
+      s+='<circle cx="'+x+'" cy="'+y+'" r="1.9" fill="'+DOT+'"/>';
+    }
+    /* ствол с каверной в зоне обвала */
+    s+='<path d="M126 10 L126 150 Q96 190 100 214 Q106 250 126 272 L126 410 L214 410 L214 272 Q234 250 240 214 Q244 190 214 150 L214 10 Z" fill="'+MUD+'" opacity=".55"/>';
+    /* обвалившиеся куски породы */
+    const chunk=(x,y,sz,rot)=>'<g transform="translate('+x+' '+y+') rotate('+rot+')"><path d="M0 0 l'+sz+' '+(sz*0.3)+' l'+(sz*0.2)+' '+sz+' l-'+(sz*0.7)+' '+(sz*0.4)+' z" fill="#6E5B3E"/></g>';
+    [[118,196,13,12],[210,206,15,40],[132,236,11,70],[198,244,12,20],[112,262,14,55],[214,268,10,30],
+     [128,300,13,15],[196,306,12,60],[120,330,11,25],[206,336,14,45],[136,360,10,35],[192,364,12,10]].forEach(c=>{s+=chunk(c[0],c[1],c[2],c[3]);});
+    /* падающие куски */
+    for(let k=0;k<5;k++){
+      const x=[112,214,124,206,132][k], d=1.7+k*0.3;
+      s+='<g opacity=".9"><path d="M0 0 l11 3 l2 11 l-8 4 z" fill="#7A6547"><animateTransform attributeName="transform" type="translate" values="'+x+',150; '+x+',330" dur="'+d+'s" repeatCount="indefinite"/></path></g>';
+    }
+    /* инструмент и КНБК */
+    s+='<rect x="152" y="10" width="36" height="270" rx="8" fill="'+STEEL+'"/>';
+    s+='<rect x="144" y="280" width="52" height="96" rx="8" fill="'+STEEL2+'"/>';
+    s+='<rect x="140" y="300" width="60" height="16" rx="4" fill="'+STEEL+'"/>';
+    s+='<rect x="140" y="344" width="60" height="16" rx="4" fill="'+STEEL+'"/>';
+    s+='<text x="322" y="330" text-anchor="end" fill="'+MU+'" font-size="10.5">КНБК</text>';
+    /* поток перекрыт */
+    s+='<line x1="118" y1="392" x2="118" y2="300" stroke="'+AC+'" stroke-width="2.4" stroke-dasharray="8 6">'+
+       '<animate attributeName="stroke-dashoffset" values="0;28" dur="1.3s" repeatCount="indefinite"/></line>';
+    s+='<line x1="102" y1="292" x2="134" y2="292" stroke="'+RED+'" stroke-width="3.4"/>';
+    s+='<text x="18" y="284" fill="'+RED+'" font-size="11">поток перекрыт</text>';
+    s+='<text x="18" y="268" fill="'+MU+'" font-size="10.5">давление растёт</text>';
+    s+='<rect x="152" y="10" width="36" height="18" fill="'+RED+'" opacity=".25">'+
+       '<animate attributeName="opacity" values=".08;.5;.08" dur="1.6s" repeatCount="indefinite"/></rect>';
+  }
+
+  if(type==='geom'){
+    /* наклонный ствол: КНБК цепляется за уступы */
+    s='<svg viewBox="0 0 340 420" xmlns="http://www.w3.org/2000/svg">'+
+      '<rect width="340" height="420" fill="'+BG+'"/>'+
+      '<rect x="10" y="10" width="320" height="130" rx="8" fill="'+ROCK2+'"/>'+
+      '<rect x="10" y="140" width="320" height="120" fill="'+SOFT+'"/>'+
+      '<rect x="10" y="260" width="320" height="150" rx="8" fill="'+ROCK2+'"/>';
+    for(let r=0;r<4;r++)for(let c=0;c<12;c++)
+      s+='<circle cx="'+(24+c*26+(r%2?12:0))+'" cy="'+(28+r*28)+'" r="2" fill="'+DOT+'"/>';
+    for(let r=0;r<5;r++)for(let c=0;c<12;c++)
+      s+='<circle cx="'+(24+c*26+(r%2?12:0))+'" cy="'+(276+r*26)+'" r="2" fill="'+DOT+'"/>';
+    s+='<text x="322" y="30" text-anchor="end" fill="'+MU+'" font-size="10.5">твёрдая порода</text>';
+    s+='<text x="322" y="158" text-anchor="end" fill="#C9C9C9" font-size="10.5">мягкая / неустойчивая</text>';
+    s+='<text x="322" y="284" text-anchor="end" fill="'+MU+'" font-size="10.5">твёрдая порода</text>';
+    /* наклонный ствол: в мягкой породе размыт шире, в твёрдой — узкий => уступы */
+    s+='<path d="M232 10 L286 10 L186 140 L232 140 L120 260 L166 260 L74 410 L28 410 L118 260 L82 260 L196 140 L150 140 L232 10 Z" fill="'+MUD+'" opacity=".5"/>';
+    s+='<path d="M150 140 L196 140 M82 260 L118 260" stroke="'+AC+'" stroke-width="2"/>';
+    /* труба под наклоном */
+    s+='<g transform="rotate(-38 170 210)">'+
+       '<rect x="146" y="0" width="30" height="420" rx="8" fill="'+STEEL+'"/>'+
+       '<rect x="136" y="128" width="50" height="26" rx="5" fill="'+STEEL2+'"/>'+
+       '<rect x="136" y="238" width="50" height="26" rx="5" fill="'+STEEL2+'"/>'+
+       '<rect x="136" y="330" width="50" height="26" rx="5" fill="'+STEEL2+'"/>'+
+       '</g>';
+    /* точки зацепа */
+    [[120,161],[188,248]].forEach(pt=>{
+      s+='<circle cx="'+pt[0]+'" cy="'+pt[1]+'" r="9" fill="none" stroke="'+RED+'" stroke-width="2.4">'+
+         '<animate attributeName="r" values="6;15;6" dur="1.5s" repeatCount="indefinite"/>'+
+         '<animate attributeName="opacity" values="1;.1;1" dur="1.5s" repeatCount="indefinite"/></circle>';
+    });
+    s+='<text x="14" y="200" fill="'+RED+'" font-size="11">КНБК цепляется</text>';
+    s+='<text x="14" y="216" fill="'+RED+'" font-size="11">за уступы</text>';
+    /* направление движения */
+    s+='<g opacity=".85"><polygon points="252,344 232,356 250,368" fill="'+AC+'">'+
+       '<animate attributeName="opacity" values=".2;1;.2" dur="1.6s" repeatCount="indefinite"/></polygon>'+
+       '<text x="258" y="362" fill="'+AC+'" font-size="10.5">ход инструмента</text></g>';
+  }
+  s+='</svg>';
+
+  const caps={
+    diff:'<b>Механизм.</b> Труба ложится на фильтрационную корку напротив проницаемого пласта. Зона контакта изолируется от бурового раствора, и разность давлений — раствора снаружи и пластового в зоне контакта — прижимает трубу к стенке. Площадь прилипания растёт со временем стоянки, циркуляция при этом свободная.',
+    shlam:'<b>Механизм.</b> Из неустойчивых пород в ствол обваливается порода, шлам не выносится и накапливается в затрубном пространстве вокруг КНБК. Поток перекрывается, давление растёт вплоть до «СТОП», инструмент запакован обломками.',
+    geom:'<b>Механизм.</b> В мягких породах ствол размывается шире, в твёрдых остаётся узким — на границах образуются уступы. Элементы КНБК цепляются за них при движении. Циркуляция обычно сохраняется, ход возможен в сторону, откуда пришли.'
+  };
+  return s+'<div class="piccap">'+caps[type]+'</div>';
+}
+function calcStuck(){
+  const sum=[0,0,0];let answered=0,rows='';
+  ['q1','q2','q3','q4'].forEach(q=>{
+    const v=STUCK[q],cfg=SCORE[q];
+    if(v&&cfg.opt[v]){
+      answered++;
+      const o=cfg.opt[v];
+      o[1].forEach((n,i)=>sum[i]+=n);
+      rows+='<tr><td data-l="Вопрос">'+cfg.label+' — <b style="color:var(--yellow)">'+o[0]+'</b></td>'+
+        o[1].map(n=>'<td class="calc">'+n+'</td>').join('')+'</tr>';
+    }else{
+      rows+='<tr><td data-l="Вопрос" style="color:var(--muted)">'+cfg.label+' — не выбрано</td>'+
+        '<td class="dim">—</td><td class="dim">—</td><td class="dim">—</td></tr>';
+    }
+  });
+  $('scoreTbl').querySelector('tbody').innerHTML=rows;
+  const max=Math.max.apply(null,sum);
+  ['sc1','sc2','sc3'].forEach((id,i)=>{
+    $(id).textContent=sum[i];
+    $(id).style.color=(answered===4&&sum[i]===max&&max>0)?'#FFD75E':'';
+    $(id).style.fontSize=(answered===4&&sum[i]===max&&max>0)?'16px':'';
+  });
+
+  const res=$('stuckRes');
+  if(answered<4){
+    res.innerHTML='<p class="hint">Ответьте на все четыре вопроса — механизм прихвата определится по сумме баллов.</p>';
+    $('stuckActions').style.display='none';return;
+  }
+  const names=['Прихват шламом или обвалившейся породой','Дифференциальный прихват','Заклинивание на участке сложной геометрии'];
+  const keys=['shlam','diff','geom'];
+  const win=[];sum.forEach((n,i)=>{if(n===max&&max>0)win.push(i);});
+  if(!win.length){
+    res.innerHTML='<div class="warn err">По всем ответам сумма нулевая — сочетание нетипичное. Тип прихвата по таблице не определяется, действуйте по плану работ и решению аварийного мастера.</div>';
+    $('stuckActions').style.display='none';return;
+  }
+  let note='';
+  if(win.length>1)note='<div class="d">Суммы совпали — механизм по таблице определяется неоднозначно. Ниже показан вариант «'+
+    names[win[0]]+'»; проверьте признаки второго варианта и уточните у аварийного мастера.</div>';
+  res.innerHTML='<div class="stucktype"><div class="t">'+names[win[0]]+'</div>'+
+    '<div class="d">Сумма баллов: '+sum[win[0]]+' из '+sum.join(' / ')+' (шлам / дифференциальный / заклинка)</div>'+note+'</div>';
+
+  const type=keys[win[0]];
+  const first={diff:'Если прихват произошёл при включённой циркуляции — остановить буровой насос!',
+    shlam:'При получении давления «СТОП» — остановить буровой насос, стравить давление!',
+    geom:'Определить, в каком направлении двигалась КНБК до прихвата!'};
+  $('stuckTitle').textContent='Порядок действий — '+names[win[0]].toLowerCase();
+  $('stuckWarn').innerHTML='<div class="warn err">'+first[type]+'</div>';
+  $('stuckActions').style.display='';
+
+  const MOM='максимально допустимый крутящий момент²';
+  const RAST='максимальной растягивающей нагрузки³ с учётом КЗП';
+  const SJIM='максимально допустимой осевой сжимающей нагрузки⁴';
+  const up=STUCK.q1!=='down';
+  let h='';
+
+  if(type==='diff'){
+    h+=stepHTML(1,'10–15 мин','На собственном весе (СВ) приложить и довести¹ '+MOM+' до глубины прихвата.');
+    h+=stepHTML(2,'30–60 мин', 'Снять крутящий момент, расхаживать инструмент с работой ясом <b>ВНИЗ</b> в интервале весов: вверх — до веса зарядки яса, вниз — до '+SJIM+', чередуя операцию с п. 1.');
+    h+=stepHTML(3,'','Восстановить циркуляцию с поэтапным выходом на максимально допустимую производительность.');
+    h+=stepHTML(4,'не более 12 ч','Чередовать процедуру доведения¹ '+MOM+' с расхаживанием и работой ясом <b>ВВЕРХ</b> и <b>ВНИЗ</b> в интервале весов: вверх — до '+RAST+', вниз — до '+SJIM+'. Перед ударом яса ВНИЗ снизить производительность БН до минимальной.');
+    h+=stepHTML(5,'','Подготовка к установке противоприхватных ванн. Вторичные действия должны быть направлены на снижение гидростатического давления с учётом возможных рисков (ГНВП, дестабилизация неустойчивых пород). Рекомендуемый дизайн противоприхватных ванн: нефть, композитный раствор или их комбинация.');
+  }
+  if(type==='shlam'){
+    h+=stepHTML(1,'10–15 мин', up
+      ? 'На СВ приложить и довести¹ '+MOM+' до глубины прихвата. Снять пружину, попробовать расходить бурильный инструмент с ударом яса <b>ВНИЗ</b> в интервале весов: вверх — до зарядки яса, вниз — до '+SJIM+'.'
+      : 'Расхаживание инструмента с работой ясом <b>ВВЕРХ</b> в интервале весов: вниз — до СВ (или ниже — до веса зарядки яса), вверх — до '+RAST+'.');
+    h+=stepHTML(2,'','Попытаться восстановить циркуляцию с минимально возможной производительностью БН без расхаживания инструмента и набора пружины. В случае отсутствия регулировки ходов насоса восстановление циркуляции производится ЦА.');
+    h+=stepHTML(3,'30–60 мин','Продолжить попытки восстановления циркуляции, чередуя процедуру доведения¹ '+MOM+' с расхаживанием и работой ясом ВВЕРХ и ВНИЗ в интервале весов, достаточном для зарядки и срабатывания яса.');
+    h+=stepHTML(4,'',' ',[
+      ['Циркуляция восстановлена','восстановить циркуляцию с поэтапным выходом на максимально допустимую производительность по мере стабилизации давления. Далее приступить к промывке с расхаживанием согласно п. 5.'],
+      ['Циркуляция не восстановлена','дренирование с попеременным набором и стравливанием давления в трубном и затрубном пространстве. После каждого набора давления производить техотстой 3–5 мин с расхаживанием по п. 5.']]);
+    h+=stepHTML(5,'не более 24 ч','Чередовать процедуру доведения¹ '+MOM+' с расхаживанием и работой ясом ВВЕРХ и ВНИЗ в интервале весов: вверх — до '+RAST+', вниз — до '+SJIM+'.');
+    h+=stepHTML(6,'',' ',[
+      ['Циркуляция восстановлена','подготовка к установке противоприхватных ванн. Рекомендуемый дизайн: нефтяные, кислотные или их комбинация.'],
+      ['Циркуляция не восстановлена','в случае отрицательного результата мероприятий по восстановлению циркуляции — подготовка к этапу перебуривания.']]);
+  }
+  if(type==='geom'){
+    h+=stepHTML(1,'10–15 мин', up
+      ? 'На СВ приложить и довести¹ '+MOM+' до глубины прихвата. Снять пружину, попробовать расходить инструмент с ударом яса <b>ВНИЗ</b> в интервале весов: вверх — до зарядки яса, вниз — до '+SJIM+'.'
+      : 'Расхаживание инструмента с работой ясом <b>ВВЕРХ</b> в интервале весов: вниз — до СВ (или ниже — до веса зарядки яса), вверх — до '+RAST+'.');
+    h+=stepHTML(2,'','Восстановить циркуляцию с поэтапным выходом на максимально допустимую.');
+    h+=stepHTML(3,'не более 12 ч', up
+      ? 'Чередовать процедуру доведения¹ '+MOM+' с расхаживанием и работой ясом <b>ВНИЗ</b> в интервале весов: вверх — до зарядки яса, вниз — до '+SJIM+'. Перед ударом яса ВНИЗ снизить производительность БН до минимальной.'
+      : 'Расхаживание инструмента с работой ясом <b>ВВЕРХ</b> в интервале весов: вниз — до СВ (или ниже — до веса зарядки яса), вверх — до '+RAST+'.');
+    h+=stepHTML(4,'','Подготовка к установке противоприхватных ванн. В случае риска усугубления заклинки развитием дифференциального прихвата рекомендуется применение нефтяных и комбинированных нефте-кислотных и водо-нефтекислотных ванн.');
+  }
+  $('stuckSteps').innerHTML=h;
+  $('stuckPic').innerHTML=stuckPic(type);
+}
+function nowStuck(){
+  const d=new Date();
+  $('st_time').value=('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+' '+
+    ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+}
+function copyStuck(){
+  const g=id=>$(id).value||'—';
+  const t=$('stuckTitle').textContent.replace('Порядок действий — ','');
+  const txt='ПРИХВАТ'+(($('stuckActions').style.display!=='none')?' — '+t:'')+
+    '\nВремя: '+g('st_time')+
+    '\nИнструмент: '+g('st_md')+' м, забой: '+g('st_zab')+' м'+
+    '\nСобственный вес: '+g('st_sv')+' тс, вес после: '+g('st_w2')+' тс'+
+    '\nДавление: '+g('st_p')+' кгс/см², подача: '+g('st_q')+' л/с, момент: '+g('st_m')+' кН·м';
+  const done=()=>{$('st_copy').innerHTML='<div class="warn">Скопировано в буфер обмена</div>';
+    setTimeout(function(){$('st_copy').innerHTML='';},4000);};
+  function fallback(){
+    const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);
+    ta.select();try{document.execCommand('copy');done();}catch(e){alert(txt);}
+    document.body.removeChild(ta);
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(fallback);
+  }else fallback();
+}
+
 /* ======== вертикаль во вкладки ======== */
 function pushTvd(){
   const t=num($('tvd').value);
@@ -1887,7 +2315,7 @@ function initPWA(){
 const dl=document.createElement('datalist');dl.id='bitlist';
 dl.innerHTML=BITS.map(b=>'<option value="'+b+'">').join('');document.body.appendChild(dl);
 loadPreset('zbs');
-buildTabs();safeCalc();calcDol();calcPress();buildRef();calcHydro();calcMud();registerSW();
+buildTabs();initStuck();safeCalc();calcDol();calcPress();buildRef();calcHydro();calcMud();registerSW();
 addNpv();calcDrill();
 </script>
 </body>
