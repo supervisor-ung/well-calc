@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Расчёт объёмов скважины</title>
+<meta name="theme-color" content="#08090A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Скважина">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+<style>
+:root{
+  --bg:#08090A; --bg2:#000000;
+  --panel:#17191E; --panel2:#1E2127;
+  --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.13);
+  --text:#F2F4F6; --muted:#9AA2AB;
+  --yellow:#FFCE45; --yellow-d:#E09A10; --yellow-2:#FF9F1C;
+  --red:#FF6B6E; --green:#4ED47F;
+  --sh-d:#000000; --sh-l:#282C33;
+  --edge:1px solid rgba(255,255,255,.06);
+  --r:20px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(1100px 650px at 50% -12%,#16181B 0%,var(--bg) 52%,var(--bg2) 100%);
+  background-attachment:fixed;
+  color:var(--text);
+  font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:14px;line-height:1.5;min-height:100vh;position:relative;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* ---------- герб на фоне ---------- */
+#bgmark{position:fixed;inset:0;z-index:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#bgmark svg{width:min(115vh,115vw);height:auto;opacity:.06;filter:blur(.3px)}
+#bgmark svg g:last-child rect,.mark g:last-child rect{fill:var(--text)}
+.wrap{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:20px 16px 64px}
+
+/* ---------- шапка ---------- */
+header{display:flex;align-items:center;gap:14px;padding:14px 18px;margin-bottom:18px;
+  background:linear-gradient(160deg,#1C1F25 0%,var(--panel) 60%);border:var(--edge);border-radius:var(--r);
+  box-shadow:10px 10px 22px var(--sh-d),-8px -8px 20px var(--sh-l)}
+header .mark{width:44px;height:44px;flex:0 0 auto;padding:6px;border-radius:14px;
+  background:var(--panel);box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9px var(--sh-l)}
+header h1{font-family:"Arial Narrow","Helvetica Neue Condensed",Arial,sans-serif;font-weight:700;
+  text-transform:uppercase;letter-spacing:.14em;font-size:19px;margin:0}
+header .sub{color:var(--muted);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase}
+header .spacer{flex:1}
+.hbtns{display:flex;gap:9px;flex-wrap:wrap}
+
+/* ---------- вкладки ---------- */
+/* ---------- меню: плитки ---------- */
+nav.tabs{display:grid;gap:12px;margin:0 0 22px;border:0;
+  grid-template-columns:repeat(6,1fr)}
+nav.tabs button{
+  background:linear-gradient(160deg,#1C1F25 0%,var(--panel) 65%);border:var(--edge);color:var(--muted);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  padding:16px 8px 13px;border-radius:20px;
+  font-family:"Arial Narrow",Arial,sans-serif;text-transform:uppercase;
+  letter-spacing:.07em;font-size:11px;font-weight:700;line-height:1.25;text-align:center;
+  box-shadow:7px 7px 16px var(--sh-d),-7px -7px 16px var(--sh-l);transition:.16s;
+}
+nav.tabs button .ic{display:flex;align-items:center;justify-content:center;
+  width:46px;height:46px;border-radius:15px;background:var(--panel);
+  box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9px var(--sh-l)}
+nav.tabs button .ic svg{width:24px;height:24px;stroke:var(--muted);fill:none;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:.16s}
+nav.tabs button:hover{color:var(--text)}
+nav.tabs button:hover .ic svg{stroke:var(--yellow)}
+nav.tabs button:active{box-shadow:inset 5px 5px 11px var(--sh-d),inset -5px -5px 11px var(--sh-l)}
+nav.tabs button.on{color:var(--text);box-shadow:7px 7px 18px var(--sh-d),-7px -7px 16px var(--sh-l)}
+nav.tabs button.on .ic{background:linear-gradient(145deg,var(--yellow),var(--yellow-2));
+  box-shadow:0 6px 16px rgba(224,154,16,.32)}
+nav.tabs button.on .ic svg{stroke:#141414}
+/* вариант 2 — крупные плитки, иконка слева */
+body.nav2 nav.tabs{grid-template-columns:repeat(3,1fr)}
+body.nav2 nav.tabs button{flex-direction:row;justify-content:flex-start;gap:13px;
+  padding:15px 16px;text-align:left;font-size:11.5px}
+body.nav2 nav.tabs button .ic{width:42px;height:42px;flex:0 0 42px}
+/* вариант 3 — компактные пилюли */
+body.nav3 nav.tabs{display:flex;flex-wrap:wrap;gap:9px}
+body.nav3 nav.tabs button{flex-direction:row;gap:9px;padding:9px 15px;border-radius:15px;font-size:11px}
+body.nav3 nav.tabs button .ic{width:28px;height:28px;border-radius:9px;box-shadow:none;background:transparent}
+body.nav3 nav.tabs button .ic svg{width:19px;height:19px}
+body.nav3 nav.tabs button.on{background:linear-gradient(145deg,var(--yellow),var(--yellow-2));color:#141414}
+body.nav3 nav.tabs button.on .ic{background:transparent;box-shadow:none}
+body.nav3 nav.tabs button.on .ic svg{stroke:#141414}
+.tab{display:none}
+.tab.on{display:block}
+
+/* ---------- панели ---------- */
+.panel{
+  background:linear-gradient(160deg,#1B1E24 0%,var(--panel) 60%);
+  border:var(--edge);border-radius:var(--r);margin-bottom:18px;overflow:hidden;
+  box-shadow:10px 10px 24px var(--sh-d),-8px -8px 20px var(--sh-l);
+}
+.panel > h2{
+  margin:0;padding:15px 18px 11px;border:0;
+  font-family:"Arial Narrow",Arial,sans-serif;font-size:12.5px;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;
+  display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+}
+.panel > h2::before{content:"";width:5px;height:17px;border-radius:3px;flex:0 0 auto;
+  background:linear-gradient(180deg,var(--yellow),var(--yellow-2))}
+.panel .body{padding:6px 18px 18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:900px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+/* ---------- поля ---------- */
+label.f{display:block;margin-bottom:12px}
+label.f span{display:block;color:var(--muted);font-size:11px;margin-bottom:6px;
+  text-transform:uppercase;letter-spacing:.07em}
+input,select,textarea{
+  width:100%;background:#101216;border:var(--edge);color:var(--text);
+  padding:11px 13px;border-radius:13px;
+  font-family:ui-monospace,Consolas,"SF Mono",monospace;font-size:13.5px;
+  box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9px var(--sh-l);
+  transition:.15s;
+}
+input:focus,select:focus,textarea:focus{outline:none;
+  box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9px var(--sh-l),0 0 0 1.5px var(--yellow-d)}
+input[readonly]{color:var(--muted);box-shadow:inset 3px 3px 6px var(--sh-d)}
+input::placeholder{color:#666E78}
+select{font-family:inherit;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+.btn{
+  background:linear-gradient(160deg,#22262C 0%,#181B20 100%);border:var(--edge);color:var(--text);
+  padding:10px 17px;cursor:pointer;border-radius:14px;
+  font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  box-shadow:5px 5px 11px var(--sh-d),-5px -5px 11px var(--sh-l);transition:.14s;
+}
+.btn:hover{color:var(--yellow)}
+.btn:active{box-shadow:inset 4px 4px 8px var(--sh-d),inset -4px -4px 8px var(--sh-l);color:var(--yellow)}
+.btn.pri{background:linear-gradient(145deg,var(--yellow),var(--yellow-2));color:#1A1C20;
+  box-shadow:5px 5px 14px rgba(224,154,16,.3),-4px -4px 10px var(--sh-l)}
+.btn.pri:hover{color:#1A1C20}
+.btn.sm{padding:7px 13px;font-size:10.5px;border-radius:11px}
+.btn.xs{padding:5px 10px;font-size:11px;border-radius:9px;line-height:1.2}
+.btn.danger:hover,.btn.danger:active{color:var(--red)}
+.btn[disabled]{opacity:.35;cursor:not-allowed}
+
+/* ---------- таблицы ---------- */
+.tscroll{overflow-x:auto;border-radius:16px;background:rgba(0,0,0,.35);
+  box-shadow:inset 4px 4px 10px var(--sh-d),inset -4px -4px 10px var(--sh-l);padding:9px}
+table{border-collapse:separate;border-spacing:0 4px;width:100%;min-width:640px}
+th,td{border:0;padding:7px 9px;text-align:right;font-size:13px}
+th{color:var(--muted);font-weight:700;text-align:center;font-size:10px;
+  text-transform:uppercase;letter-spacing:.06em;line-height:1.3;padding:4px 8px 8px}
+tbody tr{background:linear-gradient(160deg,#23272E 0%,#1A1D22 100%);border-radius:12px}
+tbody td:first-child{border-radius:12px 0 0 12px}
+tbody td:last-child{border-radius:0 12px 12px 0}
+td:first-child,th:first-child{text-align:left}
+td input,td select{padding:8px 10px;border-radius:10px;font-size:13px;
+  box-shadow:inset 3px 3px 6px var(--sh-d),inset -3px -3px 6px var(--sh-l)}
+td.calc{font-family:ui-monospace,Consolas,monospace;color:#FFD24A;font-weight:600}
+td.dim{font-family:ui-monospace,Consolas,monospace;color:var(--muted)}
+td.act{text-align:center;white-space:nowrap}
+tfoot td{background:transparent;font-family:ui-monospace,Consolas,monospace;font-weight:700;
+  color:var(--text);padding-top:10px}
+tfoot td.calc{color:var(--yellow)}
+
+/* ---------- результаты ---------- */
+.res{display:grid;grid-template-columns:1fr auto;gap:0 16px;align-items:baseline}
+.res .k{color:var(--muted);font-size:12.5px;padding:8px 0;border-bottom:1px solid var(--line)}
+.res .v{font-family:ui-monospace,Consolas,monospace;font-size:15px;font-weight:700;text-align:right;
+  color:#FFFFFF;padding:8px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+.res .v.neg{color:var(--red)}
+.res .hd{grid-column:1/-1;color:var(--yellow);font-size:10.5px;letter-spacing:.15em;
+  text-transform:uppercase;margin-top:14px;padding-bottom:4px;font-weight:700}
+.res .hd:first-child{margin-top:0}
+.big{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px;margin:2px 0 14px}
+.big div{border:var(--edge);border-radius:17px;padding:15px 17px;
+  background:linear-gradient(160deg,#22262D 0%,#171A1F 100%);
+  box-shadow:7px 7px 16px var(--sh-d),-6px -6px 14px var(--sh-l)}
+.big .l{color:#AEB6BF;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em}
+.big .n{font-family:ui-monospace,Consolas,monospace;font-size:28px;font-weight:700;
+  color:#FFD75E;line-height:1.25;margin-top:4px;text-shadow:0 0 22px rgba(255,199,44,.35)}
+.big .n small{font-size:12.5px;color:#9AA2AB;font-weight:400;text-shadow:none}
+.big div:first-child{border-color:rgba(255,199,44,.4);
+  background:linear-gradient(160deg,rgba(255,199,44,.18) 0%,rgba(255,159,28,.06) 55%,#191B20 100%);
+  box-shadow:0 0 26px rgba(224,154,16,.16),7px 7px 16px var(--sh-d),-6px -6px 14px var(--sh-l)}
+.big div:first-child .l{color:#F0D79A}
+.big div:first-child .n{color:#FFD75E}
+
+/* ---------- сообщения ---------- */
+.warn{border:0;border-radius:14px;background:rgba(255,199,44,.09);color:#EFD79B;
+  padding:11px 15px;font-size:12.5px;margin-bottom:12px;
+  box-shadow:inset 3px 3px 8px rgba(0,0,0,.3)}
+.warn.err{background:rgba(255,107,110,.1);color:#F5B8B9}
+.hint{color:var(--muted);font-size:11.5px;margin:8px 0 0}
+.formula{font-family:ui-monospace,Consolas,monospace;font-size:11.5px}
+.chk{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12.5px;cursor:pointer;user-select:none}
+.chk input{width:18px;height:18px;accent-color:var(--yellow);box-shadow:none}
+a.tc{color:var(--yellow);text-decoration:none;border-bottom:1px dotted var(--yellow-d);font-size:12px}
+a.tc:hover{color:#FFD75E}
+input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9px var(--sh-l),0 0 0 1.5px var(--red)!important}
+[data-f]{cursor:help}
+[data-f]:hover{color:var(--yellow)}
+#tip{position:fixed;z-index:99;display:none;max-width:400px;max-height:60vh;overflow:auto;
+  background:#20242A;border:var(--edge);border-radius:16px;padding:12px 15px;
+  font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.6;color:var(--text);
+  box-shadow:10px 10px 26px rgba(0,0,0,.65),-4px -4px 14px rgba(255,255,255,.03);pointer-events:none}
+#tip b{color:var(--yellow);font-weight:700;display:block;margin-bottom:5px;font-size:10.5px;
+  letter-spacing:.1em;text-transform:uppercase}
+
+/* ---------- шаги методики ---------- */
+.mudsteps div{display:flex;gap:11px;align-items:flex-start;padding:8px 0;
+  border-bottom:1px solid var(--line);font-size:13px}
+.mudsteps div:last-child{border-bottom:0}
+.mudsteps b{flex:0 0 24px;height:24px;color:var(--yellow);background:var(--panel);
+  border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;margin-top:1px;
+  box-shadow:3px 3px 7px var(--sh-d),-3px -3px 7px var(--sh-l)}
+.mudsvg{width:100%;max-width:330px;height:auto;display:block;margin:0 auto;border-radius:16px}
+#schema svg,#schemaScroll svg{border-radius:16px}
+
+/* ---------- телефон ---------- */
+@media (max-width:760px){
+  .wrap{padding:12px 11px 52px}
+  header{flex-wrap:wrap;gap:11px;padding:12px 14px;border-radius:18px}
+  header h1{font-size:15px;letter-spacing:.1em}
+  header .sub{font-size:9.5px;letter-spacing:.15em}
+  header .spacer{display:none}
+  .hbtns{width:100%}
+  .hbtns .btn{flex:1}
+  nav.tabs{grid-template-columns:repeat(3,1fr);gap:10px}
+  nav.tabs button{padding:13px 6px 11px;font-size:10px;gap:7px;border-radius:17px}
+  nav.tabs button .ic{width:40px;height:40px;border-radius:13px}
+  body.nav2 nav.tabs{grid-template-columns:repeat(2,1fr)}
+  body.nav3 nav.tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  body.nav3 nav.tabs button{white-space:nowrap}
+  .panel{border-radius:18px}
+  .panel > h2{font-size:11.5px;padding:13px 14px 9px}
+  .panel .body{padding:4px 14px 15px}
+  input,select,textarea{font-size:16px;padding:12px 13px}
+  .btn{padding:11px 15px}
+  .btn.xs{padding:7px 11px;font-size:12px}
+  .big .n{font-size:21px}
+  #schemaScroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #schema{min-width:560px}
+  .tscroll{overflow:visible;padding:0;box-shadow:none}
+  table.cards{min-width:0;width:100%}
+  table.cards thead{display:none}
+  table.cards tbody,table.cards tfoot{display:block}
+  table.cards tr{display:block;border-radius:16px;margin-bottom:12px;padding:6px 4px;background:var(--panel);
+    box-shadow:5px 5px 12px var(--sh-d),-5px -5px 12px var(--sh-l)}
+  table.cards td{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    border:0;border-bottom:1px solid var(--line);text-align:right;padding:8px 11px;border-radius:0!important}
+  table.cards td:last-child{border-bottom:0}
+  table.cards td::before{content:attr(data-l);color:var(--muted);font-size:10.5px;text-transform:uppercase;
+    letter-spacing:.05em;text-align:left;flex:1 1 45%}
+  table.cards td:empty{display:none}
+  table.cards td input,table.cards td select{flex:1 1 52%;width:auto}
+  table.cards td.act{justify-content:flex-end}
+  table.cards tfoot tr{background:var(--panel2)}
+}
+
+@media print{
+  body{background:#fff;color:#000}
+  #bgmark,nav.tabs,.hbtns,.act,.noprint,#tip{display:none!important}
+  .panel,header{box-shadow:none;border:1px solid #999;background:#fff}
+  .tscroll{box-shadow:none}
+  tbody tr{background:#fff}
+  td.calc,.big .n,.res .hd,header h1{color:#000}
+  .big div,.big div:first-child{background:#fff;border:1px solid #999;box-shadow:none}
+  .big div:first-child .n,.big div:first-child .l{color:#000}
+  input,select{box-shadow:none;border:1px solid #bbb}
+  .tab{display:block!important}
+}
+</style>
+</head>
+<body>
+
+<div id="bgmark">
+<svg viewBox="0 0 120 132" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <g fill="#FFC72C"><rect x="42" y="52" width="10" height="72"/><rect x="54" y="44" width="10" height="80"/><rect x="66" y="52" width="10" height="72"/></g>
+  <g fill="#EDEDED"><rect x="6" y="56" width="10" height="42"/><rect x="18" y="42" width="10" height="56"/><rect x="30" y="30" width="10" height="68"/>
+  <rect x="42" y="20" width="10" height="78"/><rect x="54" y="12" width="10" height="86"/><rect x="66" y="20" width="10" height="78"/>
+  <rect x="78" y="30" width="10" height="68"/><rect x="90" y="42" width="10" height="56"/><rect x="102" y="56" width="10" height="42"/></g>
+</svg>
+</div>
+
+<div id="tip"></div>
+
+<div class="wrap">
+
+<header>
+  <svg class="mark" viewBox="0 0 120 132" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#FFC72C"><rect x="42" y="52" width="10" height="72"/><rect x="54" y="44" width="10" height="80"/><rect x="66" y="52" width="10" height="72"/></g>
+    <g fill="#EDEDED"><rect x="6" y="56" width="10" height="42"/><rect x="18" y="42" width="10" height="56"/><rect x="30" y="30" width="10" height="68"/>
+    <rect x="42" y="20" width="10" height="78"/><rect x="54" y="12" width="10" height="86"/><rect x="66" y="20" width="10" height="78"/>
+    <rect x="78" y="30" width="10" height="68"/><rect x="90" y="42" width="10" height="56"/><rect x="102" y="56" width="10" height="42"/></g>
+  </svg>
+  <div>
+    <h1>Расчёт объёмов скважины</h1>
+    <div class="sub">Промывка · продавка · долив · вытеснение · v1.1</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="hbtns">
+    <button class="btn" onclick="saveFile()">Сохранить</button>
+    <button class="btn" onclick="document.getElementById('loadfile').click()">Загрузить</button>
+    <select id="navStyle" onchange="setNav(this.value)" style="width:auto;font-size:11.5px;padding:9px 30px 9px 12px">
+      <option value="1">Меню: плитки</option>
+      <option value="2">Меню: широкие плитки</option>
+      <option value="3">Меню: пилюли</option>
+    </select>
+    <button class="btn" onclick="window.print()" id="printBtn">Печать</button>
+    <input type="file" id="loadfile" accept=".json" style="display:none" onchange="loadFile(event)">
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="on" data-tab="calc">Промывка и продавка</button>
+  <button data-tab="hydro">Гидравлика</button>
+  <button data-tab="mud">Параметры раствора</button>
+  <button data-tab="press">Опрессовка колонны</button>
+  <button data-tab="drill">Бурение и НПВ</button>
+  <button data-tab="ref">Справочник</button>
+</nav>
+
+<section class="tab on" id="tab-calc">
+
+  <div class="panel">
+    <h2>Данные скважины
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="loadPreset('zbs')">Комплект ЗБС</button>
+      <button class="btn sm" onclick="loadPreset('bs')">Комплект БС</button>
+      <button class="btn sm danger" onclick="clearAll()">Очистить</button>
+    </h2>
+    <div class="body">
+      <div class="grid4">
+        <label class="f"><span>Тип работ</span>
+          <select id="mode" onchange="setMode()">
+            <option value="zbs">ЗБС — зарезка бокового ствола</option>
+            <option value="bs">БС — бурение ствола</option>
+          </select></label>
+        <label class="f"><span>Забой, м</span><input id="zaboy" value="" inputmode="decimal" oninput="safeCalc()"></label>
+        <label class="f"><span id="lblBash">Низ окна, м</span><input id="bashmak" value="" inputmode="decimal" oninput="safeCalc()"></label>
+        <label class="f"><span>Открытый ствол, м</span><input id="ostvol" readonly></label>
+      </div>
+      <div class="grid3">
+        <label class="f"><span>Подача насоса, л/с</span><input id="podacha" value="" inputmode="decimal" oninput="safeCalc()"></label>
+        <label class="f"><span>Коэффициент кавернозности</span><input id="kaver" value="1.25" oninput="safeCalc()"></label>
+      </div>
+      <div id="valWarn"></div>
+      <p class="hint">Заполняются только белые поля. Наведите курсор на любое жёлтое число — покажется формула расчёта с подстановкой значений.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Открытый ствол
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="fillOpen()">Подставить длину</button>
+      <button class="btn sm" onclick="addOpen()">+ Строка</button>
+    </h2>
+    <div class="body">
+      <div class="tscroll">
+      <table class="cards" id="tblOpen">
+        <thead><tr><th style="min-width:150px">Диаметр долота, мм</th><th>Длина, м</th>
+        <th>Коэффициент кавернозности</th><th>Объём, м³</th><th>На погонный метр, л/м</th><th class="act"></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td colspan="3">Итого объём открытого ствола</td><td class="calc" id="oV">0</td><td></td><td></td></tr></tfoot>
+      </table>
+      </div>
+      <div id="openWarn"></div>
+    </div>
+  </div>
+
+  
+
+  <div class="panel">
+    <h2>Схема скважины<span style="flex:1"></span><span class="hint" style="margin:0">масштаб по глубине</span></h2>
+    <div class="body"><div id="schemaScroll"><div id="schema"></div></div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Бурильный инструмент / КНБК
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="addTool()">+ Строка</button>
+    </h2>
+    <div class="body">
+      <div class="tscroll">
+      <table class="cards" id="tblTool">
+        <thead>
+          <tr>
+            <th style="min-width:150px">Наименование<br>(сверху вниз)</th>
+            <th>Толщина<br>стенки, мм</th>
+            <th>D наруж.<br>мм</th>
+            <th>D внутр.<br>мм</th>
+            <th>В колонне<br>м</th>
+            <th>В открытом<br>стволе, м</th>
+            <th>Длина<br>секции, м</th>
+            <th>Интервал<br>по стволу, м</th>
+            <th>V наруж.<br>м³</th>
+            <th>V внутр.<br>м³</th>
+            <th>V металла<br>м³</th>
+            <th class="act"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4">Итого по инструменту</td>
+            <td class="calc" id="tLc">0</td><td class="calc" id="tLo">0</td>
+            <td class="calc" id="tL">0</td><td></td>
+            <td class="calc" id="tF">0</td><td class="calc" id="tG">0</td><td class="calc" id="tH">0</td><td></td>
+          </tr>
+        </tfoot>
+      </table>
+      </div>
+      <p class="hint">Порядок строк — порядок компоновки сверху вниз (СБТ → ТБТ → СБТ → КНБК). Стрелками ↑ ↓ можно менять местами.
+      Длины в колонне и в открытом стволе программа делит сама по глубине низа окна / башмака.</p>
+      <div id="toolWarn"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Обсадные колонны
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="addCas()">+ Строка</button>
+    </h2>
+    <div class="body">
+      <div class="tscroll">
+      <table class="cards" id="tblCas">
+        <thead>
+          <tr><th style="min-width:150px">Колонна</th><th>Толщина стенки, мм</th><th>D наруж., мм</th>
+          <th>D внутр., мм</th><th>Длина, м</th><th>V наруж., м³</th><th>V внутр., м³</th><th>V металла, м³</th><th class="act"></th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot><tr><td colspan="5">Итого по колоннам</td>
+          <td class="calc" id="cF">0</td><td class="calc" id="cG">0</td><td class="calc" id="cH">0</td><td></td></tr></tfoot>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Промывка</h2>
+      <div class="body">
+        <div class="big">
+          <div><div class="l">V продавки</div><div class="n" id="r_vprod">—<small> м³</small></div></div>
+          <div><div class="l">Время продавки</div><div class="n" id="r_tprod">—<small> мин</small></div></div>
+        </div>
+        <div class="res" id="resMain"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Долив и вытеснение</h2>
+      <div class="body">
+        <div class="grid2">
+          <label class="f"><span>Ø наружный трубы, мм</span><input id="dl_d" inputmode="decimal" oninput="calcDol()"></label>
+          <label class="f"><span>Объём металла, л/м</span><input id="dl_met" inputmode="decimal" oninput="calcDol()"></label>
+          <label class="f"><span>Подняли / спустили, метров</span><input id="dl_len" inputmode="decimal" oninput="calcDol()"></label>
+          <label class="f"><span>Длина свечи, м</span><input id="dl_sv" value="" placeholder="вписать" inputmode="decimal" oninput="calcDol()"></label>
+        </div>
+        <div class="big">
+          <div><div class="l">Долив при подъёме</div><div class="n" id="dl_up">—<small> м³</small></div></div>
+          <div><div class="l">Вытеснение при спуске</div><div class="n" id="dl_dn">—<small> м³</small></div></div>
+        </div>
+        <div class="res" id="resFill"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tab" id="tab-press">
+  <div class="grid2">
+    <div class="panel">
+      <h2>Опрессовка колонны</h2>
+      <div class="body">
+        <label class="f"><span>Вертикаль, м</span><input id="p_h" value="" inputmode="decimal" oninput="calcPress()"></label>
+        <label class="f"><span>Плотность тех. воды, г/см³</span><input id="p_rw" value="1.01" inputmode="decimal" oninput="calcPress()"></label>
+        <label class="f"><span>Плотность бурового раствора, г/см³</span><input id="p_rm" value="" inputmode="decimal" oninput="calcPress()"></label>
+        <label class="f"><span>Давление опрессовки на тех. воде, атм</span><input id="p_p" value="" inputmode="decimal" oninput="calcPress()"></label>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Результат</h2>
+      <div class="body">
+        <div class="big"><div><div class="l">Давление опрессовки на БР</div><div class="n" id="p_res">—<small> атм</small></div></div></div>
+        <div class="res" id="p_detail"></div>
+        <p class="hint formula">Pбр = Pв − (ρбр · 0,0981 · H − ρв · 0,0981 · H)</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tab" id="tab-hydro">
+  <div class="grid2">
+    <div class="panel">
+      <h2>Гидростатика и ЭЦП</h2>
+      <div class="body">
+        <div class="grid2">
+          <label class="f"><span>Плотность БР, г/см³</span><input id="h_ro" value="" inputmode="decimal" oninput="calcHydro()"></label>
+          <label class="f"><span>Вертикаль (TVD), м</span><input id="h_tvd" value="" inputmode="decimal" oninput="calcHydro()"></label>
+          <label class="f"><span>Потери давления в затрубье, атм</span><input id="h_dpk" value="" inputmode="decimal" oninput="calcHydro()"></label>
+          <label class="f"><span>Пластовое давление, атм</span><input id="h_ppl" value="" inputmode="decimal" oninput="calcHydro()"></label>
+        </div>
+        <div class="res" id="h_res1"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Перепад давления на долоте
+        <span style="flex:1"></span>
+        <button class="btn sm" onclick="pullHydro()">Взять из расчёта</button>
+      </h2>
+      <div class="body">
+        <div class="grid2">
+          <label class="f"><span>Подача насоса, л/с</span><input id="h_q" value="" inputmode="decimal" oninput="calcHydro()"></label>
+          <label class="f"><span>Количество насадок, шт</span><input id="h_nn" value="3" inputmode="decimal" oninput="calcHydro()"></label>
+          <label class="f"><span>Диаметр насадки, мм</span><input id="h_dn" value="" inputmode="decimal" oninput="calcHydro()"></label>
+          <label class="f"><span>Коэффициент расхода</span><input id="h_mu" value="0.95" inputmode="decimal" oninput="calcHydro()"></label>
+        </div>
+        <div class="res" id="h_res2"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Потери давления в циркуляционной системе (ориентировочно)
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="pullHydro()">Взять из расчёта</button>
+    </h2>
+    <div class="body">
+      <div class="grid4">
+        <label class="f"><span>Длина бурильных труб, м</span><input id="h_lt" value="" inputmode="decimal" oninput="calcHydro()"></label>
+        <label class="f"><span>D внутр. труб, мм</span><input id="h_dt" value="" inputmode="decimal" oninput="calcHydro()"></label>
+        <label class="f"><span>D наруж. труб, мм</span><input id="h_dtn" value="" inputmode="decimal" oninput="calcHydro()"></label>
+        <label class="f"><span>Коэффициент гидравл. сопротивления λ</span><input id="h_lam" value="0.02" inputmode="decimal" oninput="calcHydro()"></label>
+        <label class="f"><span>Длина КП в колонне, м</span><input id="h_lk1" value="" inputmode="decimal" oninput="calcHydro()"></label>
+        <label class="f"><span>D внутр. колонны, мм</span><input id="h_dk1" value="" inputmode="decimal" oninput="calcHydro()"></label>
+        <label class="f"><span>Длина КП в открытом стволе, м</span><input id="h_lk2" value="" inputmode="decimal" oninput="calcHydro()"></label>
+        <label class="f"><span>D открытого ствола, мм</span><input id="h_dk2" value="" inputmode="decimal" oninput="calcHydro()"></label>
+      </div>
+      <div class="grid2"><div class="res" id="h_res3"></div>
+      <div><div class="big"><div><div class="l">Ориентировочное давление на насосе</div>
+        <div class="n" id="h_pump">—<small> атм</small></div></div></div>
+        <p class="hint">Расчёт по формуле Дарси — Вейсбаха с постоянным λ, без учёта реологии раствора и потерь
+        в обвязке и забойном двигателе. Это оценка порядка величины, а не замена гидравлической программы:
+        рабочее давление всегда сверяйте с манометром.</p></div></div>
+    </div>
+  </div>
+
+  
+</section>
+
+<section class="tab" id="tab-mud">
+
+  <div class="panel">
+    <h2>Измерение параметров бурового раствора на водной основе</h2>
+    <div class="body">
+      <p class="hint" style="font-size:13px;color:var(--text);margin:0 0 8px">
+        Методика приведена по видеоинструкции — у каждого замера стоит таймкод, ссылка открывает ролик на нужной секунде.
+        Пробу отбирают в одном и том же месте, перемешивают и дают выйти воздуху, температуру записывают вместе с каждым параметром.</p>
+      <p class="hint" style="font-size:12.5px">Видео с показом замеров:
+        <a class="tc" href="https://youtu.be/TvfrLJqJTWw" target="_blank">youtu.be/TvfrLJqJTWw</a></p>
+      <p class="hint" style="font-size:12.5px;border-left:3px solid var(--yellow);padding:7px 11px;background:rgba(255,199,44,.07)">
+        У каждого замера стоит таймкод — нажатие открывает ролик на нужной секунде.
+        <b style="display:inline;color:var(--yellow)">Для перехода по таймкоду включите VPN</b> и подключение к интернету:
+        без VPN видео не откроется. Сама программа работает без интернета — ссылки нужны только для просмотра ролика.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>1. Температура раствора <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=5" target="_blank">0:05</a></h2>
+    <div class="body">
+      <p class="hint" style="font-size:13px;color:var(--text);margin:0 0 8px">Температура сильно влияет на реологические свойства,
+        поэтому её пишут рядом с каждым замером. По изменению температуры во время циркуляции можно заметить момент начала
+        промыва элементов КНБК или бурильного инструмента.</p>
+      <div class="mudsteps"><div><b>1</b> Замер выполняется стандартным термометром — отдельным или совмещённым с другим прибором, например с плотномером.</div><div><b>2</b> Термометр выдерживают в потоке до стабилизации показания.</div><div><b>3</b> Записывают температуру и место отбора пробы.</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Плотность — рычажные весы <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=52" target="_blank">0:52</a> · процедура <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=102" target="_blank">1:42</a></h2>
+    <div class="body">
+      <div class="grid2">
+        <div>
+          <div class="mudsteps"><div><b>1</b> Заполнить чашу буровым раствором.</div><div><b>2</b> Установить крышку так, чтобы раствор пошёл через верх.</div><div><b>3</b> Очистить наружную поверхность чаши от раствора и вытереть досуха.</div><div><b>4</b> Установить призму рычага на корпус основания.</div><div><b>5</b> Двигать указатель весов до горизонтального положения — на это укажет пузырёк уровня на балансире.</div><div><b>6</b> Снять плотность или удельный вес по ближайшему делению рычага.</div></div>
+          <p class="hint">Плотность создаёт гидростатическое давление, при котором в скважину не поступает пластовый флюид.
+          Гидростатическое давление должно превышать пластовое и быть меньше давления гидроразрыва.
+          <b style="display:inline;color:var(--yellow)">Показатель безопасности — не менее 5 %.</b>
+          С ростом пластового давления плотность повышают утяжелителями: мраморной крошкой, баритом, гематитом.</p>
+        </div>
+        <div id="svgBal"></div>
+      </div>
+
+      <div class="grid4" style="margin-top:10px">
+        <label class="f"><span>Плотность раствора, г/см³</span><input id="m_r1" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Вертикаль, м</span><input id="m_h" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Пластовое давление, кгс/см²</span><input id="m_ppl" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Давление гидроразрыва, кгс/см²</span><input id="m_pgrp" inputmode="decimal" oninput="calcMud()"></label>
+      </div>
+      <div class="grid4">
+        <label class="f"><span>Температура пробы, °C</span><input id="m_temp" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Условная вязкость, с</span><input id="m_uv" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>pH</span><input id="m_ph" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
+      </div>
+      <div id="m_warn0"></div>
+      <div class="res" id="m_res0"></div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div>
+          <p class="hint" style="margin:0 0 6px;color:var(--yellow)">Утяжеление</p>
+          <div class="grid3">
+            <label class="f"><span>Нужная плотность, г/см³</span><input id="m_r2" inputmode="decimal" oninput="calcMud()"></label>
+            <label class="f"><span>Объём раствора, м³</span><input id="m_vol" inputmode="decimal" oninput="calcMud()"></label>
+            <label class="f"><span>Плотность утяжелителя, г/см³</span><input id="m_rb" value="4.2" inputmode="decimal" oninput="calcMud()"></label>
+          </div>
+          <div class="res" id="m_res1"></div>
+        </div>
+        <div>
+          <p class="hint" style="margin:0 0 6px;color:var(--yellow)">Разбавление водой</p>
+          <div class="grid3">
+            <label class="f"><span>Плотность воды, г/см³</span><input id="m_rw" value="1.0" inputmode="decimal" oninput="calcMud()"></label>
+            <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
+            <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
+          </div>
+          <div class="res" id="m_res2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Условная вязкость — воронка Марша <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=219" target="_blank">3:39</a></h2>
+    <div class="body">
+      <div class="grid2">
+        <div>
+          <div class="mudsteps"><div><b>1</b> Промыть воронку и мерную кружку, держать воронку вертикально.</div><div><b>2</b> Закрыть выходное отверстие пальцем.</div><div><b>3</b> Залить в воронку 1500 мл раствора через сетку — до нижней части фильтра.</div><div><b>4</b> Подставить мерную кружку, убрать палец и одновременно пустить секундомер.</div><div><b>5</b> Остановить секундомер, когда наберётся одна кварта — 946 мл. Время в секундах и есть условная вязкость.</div><div><b>6</b> Записать температуру пробы.</div></div>
+          <p class="hint">Условная вязкость показывает только общую тенденцию изменения реологии и служит индикатором
+          относительного изменения текучести раствора по сравнению с водой. По ней <b style="display:inline">нельзя</b>
+          сравнивать разные системы растворов и назначать «наилучшее» значение: то, что хорошо работает в одном случае,
+          не сработает в другом. К полимерным и инвертно-эмульсионным растворам на углеводородной и синтетической основе
+          это правило вообще неприменимо.</p>
+        </div>
+        <div id="svgFunnel"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>4. Реология — ротационный вискозиметр <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=444" target="_blank">7:24</a> · процедура <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=518" target="_blank">8:38</a></h2>
+    <div class="body">
+      <div class="grid2">
+        <div>
+          <div class="mudsteps"><div><b>1</b> Поместить пробу перемешанного раствора в чашу — уровень должен совпадать с градуированной линией внешнего цилиндра.</div><div><b>2</b> Нагреть или охладить пробу до 49 °C (120 °F), постоянно перемешивая.</div><div><b>3</b> Включить электромотор, поставить переключатель в положение высокой скорости, дождаться стабилизации стрелки и записать показание при 600 об/мин.</div><div><b>4</b> Перевести редуктор в положение 300 об/мин, дождаться стабилизации и записать показание при 300 об/мин.</div><div><b>5</b> Перемешать пробу на 600 об/мин в течение 15 секунд, плавно перевести переключатель в нейтральное положение, отключить мотор.</div><div><b>6</b> Выждать 10 секунд покоя, установить переключатель в положение «гель» (3 об/мин) и записать максимальное отклонение — СНС за 10 секунд.</div><div><b>7</b> Повторить перемешивание 15 секунд на 600 об/мин, выдержать 10 минут покоя и снять СНС за 10 минут. В критических ситуациях делают выдержку 30 минут.</div><div><b>8</b> Записать температуру исследуемой жидкости.</div></div>
+        </div>
+        <div id="svgVisc"></div>
+      </div>
+      <div class="grid4" style="margin-top:10px">
+        <label class="f"><span>θ600, град</span><input id="m_600" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>θ300, град</span><input id="m_300" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>СНС 10 сек, град</span><input id="m_g10s" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>СНС 10 мин, град</span><input id="m_g10m" inputmode="decimal" oninput="calcMud()"></label>
+      </div>
+      <div class="res" id="m_res3"></div>
+      <p class="hint"><b style="display:inline;color:var(--yellow)">Пластическая вязкость</b> — часть сопротивления течению,
+      вызванная механическим трением: концентрацией, размером и формой твёрдой фазы, вязкостью жидкой фазы, длинноцепочечными полимерами.
+      <b style="display:inline;color:var(--yellow)">ДНС</b> — вторая составляющая сопротивления, электрохимические силы притяжения между частицами;
+      по ней судят о способности раствора удерживать во взвешенном состоянии утяжелитель и очищать ствол от выбуренной породы.
+      <b style="display:inline;color:var(--yellow)">СНС</b> отражает тиксотропность. Избыточная прочность структуры — выше необходимой
+      для удержания шлама и утяжелителя — недопустима.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>5. Вязкость при низкой скорости сдвига (ВНСС) <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=662" target="_blank">11:02</a></h2>
+    <div class="body">
+      <p class="hint" style="font-size:13px;color:var(--text);margin:0 0 8px">Показатель применяют для растворов, обработанных биополимерами.
+      Такие растворы повышают эффективную вязкость при малых скоростях сдвига при незначительном росте пластической вязкости —
+      это усиливает вынос и суспендирование шлама и снижает эквивалентную плотность при циркуляции.</p>
+      <div class="mudsteps"><div><b>1</b> Замер выполняют вискозиметром Brookfield или аналогичным.</div><div><b>2</b> Используют шпиндель № 62, скорость сдвига 0,3 об/мин; диапазон измерений для этого шпинделя — до 100 000 сП.</div><div><b>3</b> Мерят вязкость самого раствора или его фильтрата.</div></div>
+      <p class="hint">Ориентировочная шкала оценки: 20 000 и 30 000 сП и выше — рубежи, по которым раствор относят к
+      удовлетворительному, хорошему и отличному по выносной способности.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>6. Фильтрация — фильтр-пресс API <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=766" target="_blank">12:46</a> · процедура <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=860" target="_blank">14:20</a></h2>
+    <div class="body">
+      <div class="grid2">
+        <div>
+          <div class="mudsteps"><div><b>1</b> Собрать ячейку, положить на место фильтровальную бумагу.</div><div><b>2</b> Влить пробу в ячейку, не доливая примерно 13 мм до верха.</div><div><b>3</b> Установить ячейку в рамку, закрыть и уплотнить крышку.</div><div><b>4</b> Закрыть клапан сброса давления, подставить под дренажную трубку сухую мерную мензурку.</div><div><b>5</b> Настроить регулятор так, чтобы за 30 секунд или менее приложить давление 100 psi (690 кПа).</div><div><b>6</b> Держать давление 100 psi в течение 30 минут.</div><div><b>7</b> Записать объём фильтрата в мензурке с точностью до миллилитра.</div><div><b>8</b> Разобрать ячейку, слить раствор и замерить толщину фильтрационной корки.</div></div>
+          <p class="hint">При высоких температуре и давлении применяют фильтр-пресс HPHT: до 250 °C и перепада 50 атм.
+          С ростом температуры и давления скорость фильтрации растёт — падает вязкость фильтрата, растёт флокуляция твёрдой фазы
+          и проницаемость корки, возможна термодеструкция понизителя фильтрации.</p>
+          <p class="hint"><b style="display:inline;color:var(--yellow)">Нормы для обычных глинистых растворов:</b>
+          водоотдача до 10–25 см³ за 30 минут при толщине корки 1–2 мм (по ВМ-6).
+          При бурении в осложнённых условиях и в неустойчивых породах водоотдачу снижают до 5 см³ за 30 минут и менее.</p>
+        </div>
+        <div id="svgPress"></div>
+      </div>
+      <div class="grid4" style="margin-top:10px">
+        <label class="f"><span>Фильтрат за 30 мин, см³</span><input id="m_f30" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Толщина корки, мм</span><input id="m_cake" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Коэффициент трения корки</span><input id="m_ktk" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Содержание песка, %</span><input id="m_sand" inputmode="decimal" oninput="calcMud()"></label>
+      </div>
+      <div class="res" id="m_res4"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>7. Коэффициент трения фильтрационной корки — КТК <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=997" target="_blank">16:37</a></h2>
+    <div class="body">
+      <p class="hint" style="font-size:13px;color:var(--text);margin:0 0 8px">Определяется в промысловой лаборатории и на буровой,
+      чтобы оценить эффективность смазочных добавок и вовремя вмешаться в процесс бурения в осложнённых условиях.</p>
+      <div class="mudsteps"><div><b>1</b> Достать бумажный фильтр с коркой, полученной после замера фильтрации.</div><div><b>2</b> Смыть буровой раствор дистиллированной водой.</div><div><b>3</b> Замерить толщину фильтрационной корки в миллиметрах.</div><div><b>4</b> Поместить фильтр на прибор КТК, включить устройство и установить значение 0.</div><div><b>5</b> Аккуратно поставить цилиндр на фильтрационную корку.</div><div><b>6</b> Медленно крутить рычаг и в момент начала движения цилиндра зафиксировать значение.</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>8. Содержание песка <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1036" target="_blank">17:16</a></h2>
+    <div class="body">
+      <div class="mudsteps"><div><b>1</b> Залить буровой раствор в мерный стакан до отметки уровня.</div><div><b>2</b> Добавить воды до следующей отметки.</div><div><b>3</b> Энергично встряхнуть стакан несколько раз до перемешивания.</div><div><b>4</b> Пропустить смесь через сито.</div><div><b>5</b> Добавить в стакан ещё немного воды, встряхнуть и снова пропустить через сито; повторять, пока вода не станет прозрачной.</div><div><b>6</b> Промыть песок, оставшийся на сите.</div><div><b>7</b> Установить на сито сверху воронку, перевернуть, опустив конец воронки в горловину мерного стакана.</div><div><b>8</b> Тонкой струёй воды смыть песок с сита в мерный стакан.</div><div><b>9</b> Дождаться осаждения песка и записать его содержание в процентах по объёму по градуированным отметкам.</div></div>
+      <p class="hint">Песок абразивен: изнашивает насосы и гидравлику двигателя, утолщает фильтрационную корку.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>9. Водородный показатель pH <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1091" target="_blank">18:11</a></h2>
+    <div class="body">
+      <p class="hint" style="font-size:13px;color:var(--text);margin:0 0 8px">От уровня pH зависят активность глин, растворимость
+      ингредиентов, эффективность добавок и скорость сероводородной коррозии. Для пресноводных растворов применяют два метода:
+      колориметрический — индикаторные полоски, и потенциометрический — pH-метр со стеклянным электродом.</p>
+      <div class="mudsteps"><div><b>1</b> Поместить электрод в раствор или фильтрат.</div><div><b>2</b> Дождаться стабилизации показания в течение 1 минуты.</div><div><b>3</b> Записать значение pH, температуру и тип пробы — буровой раствор или фильтрат.</div><div><b>4</b> В полевых условиях допускается замер индикаторными полосками со сравнением окраски по шкале.</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>10. Содержание воды, нефти и твёрдой фазы — реторта <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1171" target="_blank">19:31</a></h2>
+    <div class="body">
+      <div class="mudsteps"><div><b>1</b> Залить исследуемый раствор в ячейку до краёв.</div><div><b>2</b> Плотно закрыть крышкой — часть раствора при этом выльется.</div><div><b>3</b> Протереть крышку и резьбу ячейки.</div><div><b>4</b> В верхней горловине сделать набивку из тонкой стальной ваты — она удерживает твёрдые частицы при выпаривании.</div><div><b>5</b> Установить ячейку в горловину, реторта должна стоять вертикально, чтобы раствор не выходил через сливную трубку конденсатора.</div><div><b>6</b> Вставить и завинтить сливную трубку в выходное отверстие конденсатора.</div><div><b>7</b> Выпаривание в зависимости от содержания нефти, воды и твёрдой фазы занимает около 25 минут; не выключать реторту до окончания дистилляции.</div><div><b>8</b> Записать процентное содержание воды, нефти и твёрдых частиц по шкале мерного стакана.</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>11. Карбонат кальция — кальциметр <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1312" target="_blank">21:52</a></h2>
+    <div class="body">
+      <p class="hint" style="font-size:13px;color:var(--text);margin:0 0 8px">Контроль нужен для поддержания кольматирующих свойств
+      раствора и образования малопроницаемой фильтрационной корки. Карбонат кальция реагирует с 10-процентной соляной кислотой
+      с выделением CO₂; реакция идёт в герметично закрытой колбе, манометр измеряет давление газа, масса карбоната определяется
+      по тарировочной кривой.</p>
+      <div class="mudsteps"><div><b>1</b> Шприцем вылить на дно чаши кальциметра пробу раствора — 5 или 10 мл.</div><div><b>2</b> Налить соляную кислоту в специальную ёмкость.</div><div><b>3</b> Аккуратно поместить ёмкость на дно чаши, убедившись, что кислота не вылилась.</div><div><b>4</b> Закрутить крышку, закрыть клапан.</div><div><b>5</b> Наклонить кальциметр так, чтобы вся кислота вылилась из ёмкости.</div><div><b>6</b> Дождаться окончания реакции по показаниям манометра.</div><div><b>7</b> По графику определить содержание карбоната кальция. Несколько проб разной массы дают более точную кривую.</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>12. Метиленовый синий — МВТ <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1426" target="_blank">23:46</a></h2>
+    <div class="body">
+      <p class="hint" style="font-size:13px;color:var(--text);margin:0 0 8px">Анализ показывает катионообменную ёмкость глин
+      и позволяет судить о качестве твёрдой фазы: по результату рассчитывают эквивалентное количество бентонита в растворе, кг/м³.</p>
+      <div class="mudsteps"><div><b>1</b> Налить в колбу 2 мл бурового раствора.</div><div><b>2</b> Добавить 10 мл дистиллированной воды.</div><div><b>3</b> Добавить 15 мл перекиси водорода и 0,5 мл 5-нормальной серной кислоты.</div><div><b>4</b> Перемешать встряхиванием и кипятить на медленном огне 10 минут.</div><div><b>5</b> Титровать раствором метиленового синего, добавляя его порциями и перемешивая так, чтобы частицы оставались во взвешенном состоянии.</div><div><b>6</b> Обмакнуть стеклянную палочку и поместить каплю на фильтровальную бумагу.</div><div><b>7</b> Титрование закончено, когда вокруг капли проявится зелёно-синий ореол.</div><div><b>8</b> Записать объём метиленового синего, пошедший на титрование, в миллилитрах, и пересчитать ёмкость катионного обмена в кг/м³.</div></div>
+    
+      <div class="grid4" style="margin-top:10px">
+        <label class="f"><span>Объём пробы раствора, мл</span><input id="m_mbtv" value="2" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Метиленового синего пошло, мл</span><input id="m_mbt" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
+        <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
+      </div>
+      <div class="res" id="m_res5"></div></div>
+  </div>
+
+  <div class="panel">
+    <h2>13. Химический анализ фильтрата — титрование <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1497" target="_blank">24:57</a></h2>
+    <div class="body">
+      <p class="hint" style="font-size:13px;color:var(--text);margin:0 0 8px">
+        <b style="display:inline;color:var(--yellow)">Pm</b> — щёлочность бурового раствора: определяет загрязнение цементом и избыток извести.
+        <b style="display:inline;color:var(--yellow)">Pf и Mf</b> — щёлочность фильтрата: определяет бикарбонатное загрязнение.
+        <b style="display:inline;color:var(--yellow)">Cl⁻</b> — минерализация и поступление пластовой воды.
+        <b style="display:inline;color:var(--yellow)">Общая жёсткость</b> — загрязнение пластовой водой и цементом; низкая жёсткость нужна для эффективной работы полимеров.</p>
+
+      <div class="grid2">
+        <div>
+          <p class="hint" style="margin:0 0 6px;color:var(--yellow)">Щёлочность фильтрата Pf и Mf <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1624" target="_blank">27:04</a></p>
+          <div class="mudsteps"><div><b>1</b> Поместить 1 мл фильтрата в сосуд для титрования.</div><div><b>2</b> Добавить 2 и более капель фенолфталеина — раствор станет интенсивно розовым.</div><div><b>3</b> Титровать по каплям 0,02 н. серной кислотой, перемешивая, пока розовый цвет не исчезнет.</div><div><b>4</b> Записать Pf — число миллилитров кислоты на 1 мл фильтрата.</div><div><b>5</b> В ту же пробу добавить 3–4 капли метилового оранжевого — раствор станет бледно-оранжевым.</div><div><b>6</b> Титровать 0,02 н. кислотой до перехода цвета в оранжево-розовый.</div><div><b>7</b> Mf равна сумме миллилитров кислоты, израсходованных на Pf и на последнее титрование.</div></div>
+        </div>
+        <div>
+          <p class="hint" style="margin:0 0 6px;color:var(--yellow)">Щёлочность раствора Pm <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1699" target="_blank">28:19</a></p>
+          <div class="mudsteps"><div><b>1</b> Поместить 1 мл бурового раствора в сосуд для титрования шприцем.</div><div><b>2</b> Разбавить пробу 10 мл дистиллированной воды.</div><div><b>3</b> Добавить 5 капель фенолфталеина — раствор станет розовым.</div><div><b>4</b> Помешивая, быстро титровать 0,02 н. кислотой до обесцвечивания.</div><div><b>5</b> Записать Pm в миллилитрах кислоты на 1 мл раствора.</div></div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:10px">
+        <div>
+          <p class="hint" style="margin:0 0 6px;color:var(--yellow)">Хлориды <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1783" target="_blank">29:43</a></p>
+          <div class="mudsteps"><div><b>1</b> Поместить 1 или 2 мл фильтрата в сосуд для титрования.</div><div><b>2</b> Добавить 3 капли фенолфталеина и титровать серной кислотой до нейтральной среды.</div><div><b>3</b> Добавить 25 мл дистиллированной воды и 10 капель раствора хромовокислого калия.</div><div><b>4</b> Перемешивая, титровать стандартным раствором нитрата серебра по каплям.</div><div><b>5</b> Конечная точка — переход цвета из жёлтого в оранжево-красный, устойчивый 30 секунд.</div><div><b>6</b> Записать объём нитрата серебра в миллилитрах.</div></div>
+        </div>
+        <div>
+          <p class="hint" style="margin:0 0 6px;color:var(--yellow)">Общая жёсткость <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=2002" target="_blank">33:22</a></p>
+          <div class="mudsteps"><div><b>1</b> В сосуд для титрования добавить 1 мл фильтрата.</div><div><b>2</b> Добавить примерно 20 мл дистиллированной воды.</div><div><b>3</b> Ввести пипеткой 1 мл концентрированного буферного раствора на основе NH₄OH.</div><div><b>4</b> Добавить около 6 капель кальмагита — при наличии кальция и магния раствор станет цвета красного вина.</div><div><b>5</b> Титровать стандартным раствором версената (трилона Б) до перехода окраски.</div><div><b>6</b> Записать объём версената в миллилитрах.</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <p class="hint" style="margin:0 0 6px;color:var(--yellow)">Ионы калия <a class="tc" href="https://youtu.be/TvfrLJqJTWw?t=1859" target="_blank">30:59</a></p>
+        <div class="mudsteps"><div><b>1</b> Налить в центрифужную пробирку 7 мл фильтрата бурового раствора.</div><div><b>2</b> Добавить 3 мл стандартного раствора перхлората без перемешивания — при наличии калия сразу выпадает осадок.</div><div><b>3</b> Уравновесить пробирку другой такой же с 10 мл жидкости того же веса.</div><div><b>4</b> Центрифугировать 1 минуту при постоянной скорости 1800 об/мин.</div><div><b>5</b> Незамедлительно определить объём осадка и записать его величину.</div></div>
+      </div>
+
+      <div class="grid4" style="margin-top:12px">
+        <label class="f"><span>Фильтрата взято, мл</span><input id="m_vf" value="1" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Нитрата серебра пошло, мл</span><input id="m_agno3" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Версената (трилона Б) пошло, мл</span><input id="m_ver" inputmode="decimal" oninput="calcMud()"></label>
+        <label class="f"><span>Pf / Mf, мл</span><input id="m_pfmf" placeholder="например 0,4 / 1,2" oninput="calcMud()"></label>
+      </div>
+      <div class="res" id="m_res6"></div>
+      <p class="hint">Пересчёт хлоридов дан для стандартного раствора нитрата серебра 0,0282 н., жёсткости — для 0,02 М версената.
+      Если в лаборатории применяются растворы другой концентрации, коэффициент пересчёта берите из паспорта набора.</p>
+    </div>
+  </div>
+
+  
+</section>
+
+<section class="tab" id="tab-drill">
+  <div class="grid2">
+    
+    <div class="panel">
+      <h2>Прогноз проходки по ГГД</h2>
+      <div class="body">
+        <div class="grid2">
+          <label class="f"><span>Проходка по ГГД, м</span><input id="g_pr" value="" inputmode="decimal" oninput="calcDrill()"></label>
+          <label class="f"><span>Время по ГГД, ч</span><input id="g_t" value="" inputmode="decimal" oninput="calcDrill()"></label>
+          <label class="f"><span>Время за смену, ч</span><input id="g_sm" value="12" oninput="calcDrill()"></label>
+          <label class="f"><span>Время за сутки, ч</span><input id="g_su" value="24" oninput="calcDrill()"></label>
+          <label class="f"><span>Забой на начало смены, м</span><input id="g_zs" value="" inputmode="decimal" oninput="calcDrill()"></label>
+          <label class="f"><span>Забой на начало суток, м</span><input id="g_zd" value="" inputmode="decimal" oninput="calcDrill()"></label>
+        </div>
+        <div class="res" id="d_res2"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Расчёт НПВ
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="addNpv()">+ Интервал</button>
+      <button class="btn sm danger" onclick="$('tblNpv').querySelector('tbody').innerHTML='';calcNpv()">Очистить</button>
+    </h2>
+    <div class="body">
+      <div class="tscroll">
+      <table class="cards" id="tblNpv">
+        <thead><tr><th style="min-width:150px">Причина</th><th style="min-width:170px">Начало</th>
+          <th style="min-width:170px">Конец</th><th>Время, ч</th><th>Время, сут.</th><th class="act"></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td colspan="3">Общее НПВ</td><td class="calc" id="npv_h">0</td><td class="calc" id="npv_d">0</td><td></td></tr></tfoot>
+      </table>
+      </div>
+      <p class="hint">Время считается как разница дат: (конец − начало) в часах, сутки — часы / 24.</p>
+    </div>
+  </div>
+</section>
+
+<section class="tab" id="tab-ref">
+  <div class="panel">
+    <h2>Затрубное (кольцевое) пространство, л/м
+      <span style="flex:1"></span>
+      <span class="hint" style="margin:0">труба:</span>
+      <select id="refPipeSel" style="width:auto" onchange="buildAnn()"></select>
+    </h2>
+    <div class="body">
+      <div class="grid2">
+        <div><div class="tscroll"><table id="refAnnOpen" style="min-width:auto">
+          <thead><tr><th>В открытом стволе, мм</th><th>k = 1,00</th><th>k = 1,25</th></tr></thead><tbody></tbody></table></div></div>
+        <div><div class="tscroll"><table id="refAnnCas" style="min-width:auto">
+          <thead><tr><th>В обсадной колонне (толщ. ст.)</th><th>V, л/м</th></tr></thead><tbody></tbody></table></div></div>
+      </div>
+      <p class="hint formula">Vкп = 0,785 · (D²внешний − D²наруж.трубы) / 1000 · k</p>
+      <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px">
+        <p class="hint" style="margin:0 0 6px;color:var(--yellow)">Быстрый расчёт затруба под свои размеры</p>
+        <div class="grid4">
+          <label class="f"><span>Ø ствола или Dвн колонны, мм</span><input id="an_D" inputmode="decimal" oninput="calcAnn()"></label>
+          <label class="f"><span>Ø наружный трубы, мм</span><input id="an_d" inputmode="decimal" oninput="calcAnn()"></label>
+          <label class="f"><span>Длина интервала, м</span><input id="an_L" inputmode="decimal" oninput="calcAnn()"></label>
+          <label class="f"><span>Коэффициент кавернозности</span><input id="an_k" value="1" inputmode="decimal" oninput="calcAnn()"></label>
+        </div>
+        <div class="res" id="an_res"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Объём открытого ствола, л/м</h2>
+    <div class="body"><div class="tscroll"><table id="refOpen">
+      <thead><tr><th>Ø долота / скважины, мм</th><th>Без кавернозности</th><th>× 1,10</th><th>× 1,15</th><th>× 1,25</th></tr></thead>
+      <tbody></tbody></table></div>
+      <p class="hint formula">V = 0,785 · D² / 1000 · k</p>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Обсадные колонны, л/м</h2>
+      <div class="body"><div class="tscroll"><table id="refCas" style="min-width:520px">
+        <thead><tr><th>Ø наруж. (толщ. ст.), мм</th><th>Ø внутр., мм</th><th>V наруж.</th><th>V внутр.</th><th>V металла</th></tr></thead>
+        <tbody></tbody></table></div></div>
+    </div>
+    <div class="panel">
+      <h2>Бурильные трубы и КНБК, л/м</h2>
+      <div class="body"><div class="tscroll"><table id="refPipe" style="min-width:520px">
+        <thead><tr><th>Наименование (толщ. ст.), мм</th><th>Ø внутр., мм</th><th>V наруж.</th><th>V внутр.</th><th>V металла</th></tr></thead>
+        <tbody></tbody></table></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Пересчёт единиц</h2>
+    <div class="body">
+      <div class="grid3">
+        <div>
+          <p class="hint" style="margin:0 0 6px">Давление</p>
+          <label class="f"><span>атм (кгс/см²)</span><input id="u_atm" inputmode="decimal" oninput="conv('atm')"></label>
+          <label class="f"><span>МПа</span><input id="u_mpa" inputmode="decimal" oninput="conv('mpa')"></label>
+          <label class="f"><span>бар</span><input id="u_bar" inputmode="decimal" oninput="conv('bar')"></label>
+          <label class="f"><span>psi</span><input id="u_psi" inputmode="decimal" oninput="conv('psi')"></label>
+        </div>
+        <div>
+          <p class="hint" style="margin:0 0 6px">Расход</p>
+          <label class="f"><span>л/с</span><input id="u_ls" inputmode="decimal" oninput="conv('ls')"></label>
+          <label class="f"><span>м³/ч</span><input id="u_m3h" inputmode="decimal" oninput="conv('m3h')"></label>
+          <label class="f"><span>м³/мин</span><input id="u_m3m" inputmode="decimal" oninput="conv('m3m')"></label>
+          <label class="f"><span>л/мин</span><input id="u_lm" inputmode="decimal" oninput="conv('lm')"></label>
+        </div>
+        <div>
+          <p class="hint" style="margin:0 0 6px">Плотность и длина</p>
+          <label class="f"><span>г/см³</span><input id="u_gcm" inputmode="decimal" oninput="conv('gcm')"></label>
+          <label class="f"><span>кг/м³</span><input id="u_kgm" inputmode="decimal" oninput="conv('kgm')"></label>
+          <label class="f"><span>метры</span><input id="u_m" inputmode="decimal" oninput="conv('m')"></label>
+          <label class="f"><span>футы</span><input id="u_ft" inputmode="decimal" oninput="conv('ft')"></label>
+        </div>
+      </div>
+      <p class="hint formula">1 атм = 0,0981 МПа = 0,981 бар = 14,22 psi · 1 л/с = 3,6 м³/ч · 1 м = 3,2808 фута</p>
+    </div>
+  </div>
+
+</section>
+
+</div>
+
+<script>
+/* ======== каталоги ======== */
+const PIPES=[
+ {n:"ЛБТПН-90",t:9,d:90},{n:"ТБТ-88,9",t:15.85,d:88.9},{n:"ТБТ-88,9",t:19.05,d:88.9},
+ {n:"СБТ-88,9",t:8,d:88.9},{n:"СБТ-88,9",t:9.35,d:88.9},{n:"СБТ-73",t:7.19,d:73},
+ {n:"ТББВ-60",t:7,d:60},{n:"ТБТ-101,6",t:19.3,d:101.6},{n:"СБТ-101,6",t:8.38,d:101.6},
+ {n:"ТБТ-127",t:25.4,d:127},{n:"СБТ-127",t:9.19,d:127},{n:"ЛБТВК-147",t:13,d:147},
+ {n:"КНБК-120",t:29,d:120},{n:"КНБК-172",t:40,d:172}];
+const CASINGS=[
+ {n:"102",t:6.5,d:101.6},{n:"114",t:6.4,d:114},{n:"114",t:7.37,d:114},{n:"114",t:7.4,d:114},
+ {n:"146",t:7.7,d:146},{n:"146",t:8.5,d:146},{n:"168",t:7.3,d:168},{n:"168",t:8.9,d:168},
+ {n:"168",t:10.6,d:168},{n:"178",t:9.2,d:178},{n:"245",t:7.9,d:245},{n:"245",t:8.9,d:245},{n:"324",t:9.5,d:324}];
+const WINLEN=3;   // длина окна при ЗБС, м
+const BITS=[122,123.8,124,126,142.9,146,155.6,190.5,215.9,220.7,295.3,300,393.7];
+const PRESETS={
+ zbs:{tool:[["СБТ-88,9",8,88.9],["ТБТ-88,9",15.85,88.9],["СБТ-88,9",8,88.9],["КНБК-120",29,120]],
+      cas:[["102",6.5,101.6]],open:[122]},
+ bs:{tool:[["СБТ-127",9.19,127],["ТБТ-127",25.4,127],["СБТ-127",9.19,127],["КНБК-172",40,172]],
+     cas:[["168",8.9,168]],open:[215.9]}};
+
+/* ======== утилиты ======== */
+const $=id=>document.getElementById(id);
+function num(v){const x=parseFloat(String(v).replace(',','.'));return isFinite(x)?x:0;}
+function fmt(v,d=3){if(!isFinite(v))return "—";return v.toFixed(d).replace('.',',');}
+function n2(v,d=2){return fmt(v,d);}
+function vol(D,L){return 0.785*D*D*L/1e6;}
+
+/* ======== подсказка с формулой ======== */
+const tip=$('tip');
+document.addEventListener('mouseover',e=>{
+  const t=e.target.closest('[data-f]');
+  if(!t){tip.style.display='none';return;}
+  tip.innerHTML=t.dataset.f;tip.style.display='block';moveTip(e);
+});
+document.addEventListener('mousemove',e=>{if(tip.style.display==='block')moveTip(e);});
+/* на телефоне формула открывается по нажатию */
+let tipTimer=null;
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-f]');
+  if(!t){tip.style.display='none';return;}
+  tip.innerHTML=t.dataset.f;tip.style.display='block';
+  const r=tip.getBoundingClientRect(),b=t.getBoundingClientRect();
+  let x=Math.min(Math.max(6,b.left),innerWidth-r.width-6);
+  let y=b.bottom+8;if(y+r.height>innerHeight-6)y=Math.max(6,b.top-r.height-8);
+  tip.style.left=x+'px';tip.style.top=y+'px';
+  clearTimeout(tipTimer);tipTimer=setTimeout(()=>tip.style.display='none',6000);
+},true);
+function moveTip(e){
+  const r=tip.getBoundingClientRect();
+  let x=e.clientX+16,y=e.clientY+16;
+  if(x+r.width>innerWidth-10)x=e.clientX-r.width-16;
+  if(y+r.height>innerHeight-10)y=e.clientY-r.height-16;
+  tip.style.left=Math.max(6,x)+'px';tip.style.top=Math.max(6,y)+'px';
+}
+function F(title,body){return '<b>'+title+'</b>'+body;}
+
+/* ======== иконки и вид меню ======== */
+const TABICONS={
+  calc:'<path d="M12 3s6 6.4 6 10.2A6 6 0 0 1 6 13.2C6 9.4 12 3 12 3z"/><path d="M9.5 13.8a2.6 2.6 0 0 0 5 0"/>',
+  hydro:'<circle cx="12" cy="13" r="7.2"/><path d="M12 13l3.4-3.6"/><path d="M12 5.8V3.4"/><path d="M5.6 7.2 4.2 5.8"/><path d="M18.4 7.2l1.4-1.4"/>',
+  mud:'<path d="M10 3h4"/><path d="M10.8 3v6.2L6.4 17.4A2.4 2.4 0 0 0 8.5 21h7a2.4 2.4 0 0 0 2.1-3.6l-4.4-8.2V3"/><path d="M8.2 15.4h7.6"/>',
+  press:'<rect x="6" y="4" width="12" height="16" rx="2.4"/><path d="M12 8.4v7.2"/><path d="M9.4 11l2.6-2.6L14.6 11"/>',
+  drill:'<path d="M5 20h14"/><path d="M12 3 6.6 20"/><path d="M12 3l5.4 17"/><path d="M8.6 12.6h6.8"/><path d="M12 3v17"/>',
+  ref:'<path d="M4 5.2A2.2 2.2 0 0 1 6.2 3H11v18H6.2A2.2 2.2 0 0 0 4 18.8z"/><path d="M20 5.2A2.2 2.2 0 0 0 17.8 3H13v18h4.8A2.2 2.2 0 0 1 20 18.8z"/>'
+};
+function setNav(v){
+  document.body.classList.remove('nav2','nav3');
+  if(v==='2')document.body.classList.add('nav2');
+  if(v==='3')document.body.classList.add('nav3');
+}
+function buildTabs(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    const ic=TABICONS[b.dataset.tab]||'';
+    b.innerHTML='<span class="ic"><svg viewBox="0 0 24 24">'+ic+'</svg></span><span class="lb">'+b.textContent.trim()+'</span>';
+  });
+}
+
+/* ======== вкладки ======== */
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');$('tab-'+b.dataset.tab).classList.add('on');
+  };
+});
+function setMode(){
+  const z=$('mode').value==='zbs';
+  $('lblBash').textContent=z?'Низ окна, м':'Башмак колонны, м';
+  calc();
+}
+
+/* ======== строки ======== */
+function pipeOptions(){let o='<option value="">— выбрать —</option>';
+  PIPES.forEach((p,i)=>o+=`<option value="${i}">${p.n} (${String(p.t).replace('.',',')})</option>`);return o;}
+function casOptions(){let o='<option value="">— выбрать —</option>';
+  CASINGS.forEach((p,i)=>o+=`<option value="${i}">${p.n} (${String(p.t).replace('.',',')})</option>`);return o;}
+
+function addTool(name="",t="",d="",Lc="",Lo=""){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td data-l="Секция"><select class="pk" onchange="pickPipe(this)">${pipeOptions()}</select>
+        <input class="nm" value="${name}" placeholder="наименование" oninput="safeCalc()" style="margin-top:3px"></td>
+    <td data-l="Толщина стенки, мм"><input class="t" value="${t}" inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="D наружный, мм"><input class="d" value="${d}" inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="D внутренний, мм" class="calc din">—</td>
+    <td data-l="В колонне, м"><input class="lc" value="${Lc}" inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="В открытом стволе, м"><input class="lo" value="${Lo}" inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="Длина секции, м" class="dim L">—</td><td data-l="Интервал, м" class="dim iv">—</td>
+    <td data-l="V наружный, м³" class="calc vF">—</td><td data-l="V внутренний, м³" class="calc vG">—</td>
+    <td data-l="V металла, м³" class="calc vH">—</td>
+    <td class="act">
+      <button class="btn xs" onclick="moveRow(this,-1)">↑</button>
+      <button class="btn xs" onclick="moveRow(this,1)">↓</button>
+      <button class="btn xs danger" onclick="this.closest('tr').remove();safeCalc()">✕</button></td>`;
+  $('tblTool').querySelector('tbody').appendChild(tr);safeCalc();
+}
+function moveRow(b,dir){
+  const tr=b.closest('tr'),tb=tr.parentNode;
+  if(dir<0&&tr.previousElementSibling)tb.insertBefore(tr,tr.previousElementSibling);
+  if(dir>0&&tr.nextElementSibling)tb.insertBefore(tr.nextElementSibling,tr);
+  calc();
+}
+function pickPipe(sel){const i=sel.value;if(i==="")return;const p=PIPES[i],tr=sel.closest('tr');
+  tr.querySelector('.nm').value=p.n;tr.querySelector('.t').value=p.t;tr.querySelector('.d').value=p.d;safeCalc();}
+function addCas(name="",t="",d="",L=""){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td data-l="Колонна"><select class="pk" onchange="pickCas(this)">${casOptions()}</select>
+        <input class="nm" value="${name}" placeholder="наименование" oninput="safeCalc()" style="margin-top:3px"></td>
+    <td data-l="Толщина стенки, мм"><input class="t" value="${t}" inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="D наружный, мм"><input class="d" value="${d}" inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="D внутренний, мм" class="calc din">—</td>
+    <td data-l="Длина, м"><input class="L" value="${L}" inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="V наружный, м³" class="calc vF">—</td><td data-l="V внутренний, м³" class="calc vG">—</td>
+    <td data-l="V металла, м³" class="calc vH">—</td>
+    <td class="act"><button class="btn xs danger" onclick="this.closest('tr').remove();safeCalc()">✕</button></td>`;
+  $('tblCas').querySelector('tbody').appendChild(tr);safeCalc();
+}
+function pickCas(sel){const i=sel.value;if(i==="")return;const p=CASINGS[i],tr=sel.closest('tr');
+  tr.querySelector('.nm').value=p.n;tr.querySelector('.t').value=p.t;tr.querySelector('.d').value=p.d;safeCalc();}
+function addOpen(d="",L="",k=""){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td data-l="Ø долота, мм"><input class="d" value="${d}" list="bitlist" inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="Длина, м"><input class="L" value="${L}" inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="Кавернозность"><input class="k" value="${k}" placeholder="по умолч." inputmode="decimal" oninput="safeCalc()"></td>
+    <td data-l="Объём, м³" class="calc vV">—</td><td data-l="На 1 м, л/м" class="calc vM">—</td>
+    <td class="act"><button class="btn xs danger" onclick="this.closest('tr').remove();safeCalc()">✕</button></td>`;
+  $('tblOpen').querySelector('tbody').appendChild(tr);safeCalc();
+}
+function clearAll(){['tblTool','tblCas','tblOpen'].forEach(t=>$(t).querySelector('tbody').innerHTML='');safeCalc();}
+function safeCalc(){try{calc();}catch(e){showErr(e);}}
+function showErr(e){
+  const b=$('valWarn');
+  if(b)b.innerHTML='<div class="warn err">Ошибка расчёта: '+(e&&e.message?e.message:e)+'. Данные в таблицах сохранены, сообщите об ошибке.</div>';
+  if(window.console)console.error(e);
+}
+function loadPreset(k){
+  ['tblTool','tblCas','tblOpen'].forEach(t=>$(t).querySelector('tbody').innerHTML='');
+  $('mode').value=k;
+  $('lblBash').textContent=k==='zbs'?'Низ окна, м':'Башмак колонны, м';
+  PRESETS[k].tool.forEach(r=>addTool(r[0],r[1],r[2]));
+  PRESETS[k].cas.forEach(r=>addCas(r[0],r[1],r[2]));
+  PRESETS[k].open.forEach(d=>addOpen(d,"",""));
+  safeCalc();
+}
+function fillOpen(){
+  const rows=$('tblOpen').querySelectorAll('tbody tr');
+  if(!rows.length){addOpen();return fillOpen();}
+  const L=num($('zaboy').value)-num($('bashmak').value);
+  rows[0].querySelector('.L').value=L>0?fmt(L,1):0;safeCalc();
+}
+
+/* ======== расчёт ======== */
+function calc(){
+  const zab=num($('zaboy').value),bash=num($('bashmak').value);
+  const isZ=$('mode').value==='zbs';
+  const bashName=isZ?'низ окна':'башмак';
+  const os=zab-bash;
+  $('ostvol').value=fmt(os,1);
+  $('ostvol').dataset.f=F('Открытый ствол','забой − '+bashName+'<br>'+n2(zab,1)+' − '+n2(bash,1)+' = <b style="display:inline">'+n2(os,1)+' м</b>');
+  const Q=num($('podacha').value), kDef=num($('kaver').value)||1;
+
+  /* инструмент */
+  let sF=0,sG=0,sH=0,sJ=0,sN=0,pos=0,segs=[],sLc=0,sLo=0;
+  $('tblTool').querySelectorAll('tbody tr').forEach(tr=>{
+    const nm=tr.querySelector('.nm').value||'секция';
+    const t=num(tr.querySelector('.t').value),d=num(tr.querySelector('.d').value);
+    const inCas=num(tr.querySelector('.lc').value),inOpen=num(tr.querySelector('.lo').value);
+    const L=inCas+inOpen;
+    const din=d-2*t;
+    const top=pos,bot=pos+L;pos=bot;
+    const Fv=vol(d,L),Gv=vol(din,L),Hv=Fv-Gv;
+    tr.querySelector('.din').textContent=d?fmt(din,2):'—';
+    tr.querySelector('.din').dataset.f=F('Внутренний диаметр','Dвн = Dнар − 2 · толщина стенки<br>'+n2(d)+' − 2 · '+n2(t)+' = '+n2(din)+' мм');
+    tr.querySelector('.L').textContent=L?fmt(L,1):'—';
+    tr.querySelector('.L').dataset.f=F('Длина секции','в колонне + в открытом стволе<br>'+n2(inCas,1)+' + '+n2(inOpen,1)+' = '+n2(L,1)+' м');
+    tr.querySelector('.iv').textContent=L?fmt(top,1)+' – '+fmt(bot,1):'—';
+    tr.querySelector('.iv').dataset.f=F('Интервал по стволу','считается от устья по порядку секций сверху вниз: '+n2(top,1)+' – '+n2(bot,1)+' м');
+    sLc+=inCas;sLo+=inOpen;
+    tr.querySelector('.vF').textContent=fmt(Fv);
+    tr.querySelector('.vF').dataset.f=F('V наружный, '+nm,'0,785 · Dнар² · L / 1 000 000<br>0,785 · '+n2(d)+'² · '+n2(L,1)+' / 1 000 000 = '+fmt(Fv)+' м³');
+    tr.querySelector('.vG').textContent=fmt(Gv);
+    tr.querySelector('.vG').dataset.f=F('V внутренний, '+nm,'0,785 · Dвн² · L / 1 000 000<br>0,785 · '+n2(din)+'² · '+n2(L,1)+' / 1 000 000 = '+fmt(Gv)+' м³');
+    tr.querySelector('.vH').textContent=fmt(Hv);
+    tr.querySelector('.vH').dataset.f=F('V металла, '+nm,'Vнаруж − Vвнутр<br>'+fmt(Fv)+' − '+fmt(Gv)+' = '+fmt(Hv)+' м³');
+    sF+=Fv;sG+=Gv;sH+=Hv;sJ+=vol(d,inCas);sN+=vol(d,inOpen);
+      if(L>0)segs.push({nm:nm,d:d,din:din,top:top,bot:bot,L:L,lc:inCas,lo:inOpen,vin:Gv,vout:Fv,vmet:Hv});
+  });
+  const toolL=pos;
+  $('tL').textContent=fmt(toolL,1);
+  $('tL').dataset.f=F('Общая длина инструмента','сумма длин секций = '+fmt(toolL,1)+' м');
+  $('tLc').textContent=fmt(sLc,1);
+  $('tLc').dataset.f=F('Всего в колонне','сумма длин секций внутри обсадной колонны = '+fmt(sLc,1)+' м');
+  $('tLo').textContent=fmt(sLo,1);
+  $('tLo').dataset.f=F('Всего в открытом стволе','сумма длин секций в открытом стволе = '+fmt(sLo,1)+' м');
+  $('tF').textContent=fmt(sF);$('tG').textContent=fmt(sG);$('tH').textContent=fmt(sH);
+  $('tF').dataset.f=F('Сумма V наружных','по всем секциям = '+fmt(sF)+' м³');
+  $('tG').dataset.f=F('Сумма V внутренних','по всем секциям = '+fmt(sG)+' м³ — это объём продавки');
+  $('tH').dataset.f=F('Сумма V металла','по всем секциям = '+fmt(sH)+' м³');
+
+  /* колонны */
+  let cF=0,cG=0,cH=0,cpos=0,cassec=[];
+  $('tblCas').querySelectorAll('tbody tr').forEach(tr=>{
+    const nm=tr.querySelector('.nm').value||'колонна';
+    const t=num(tr.querySelector('.t').value),d=num(tr.querySelector('.d').value),L=num(tr.querySelector('.L').value);
+    const din=d-2*t,Fv=vol(d,L),Gv=vol(din,L),Hv=Fv-Gv;
+    tr.querySelector('.din').textContent=d?fmt(din,2):'—';
+    tr.querySelector('.din').dataset.f=F('Внутренний диаметр','Dвн = '+n2(d)+' − 2 · '+n2(t)+' = '+n2(din)+' мм');
+    tr.querySelector('.vF').textContent=fmt(Fv);
+    tr.querySelector('.vF').dataset.f=F('V наружный, '+nm,'0,785 · '+n2(d)+'² · '+n2(L,1)+' / 1 000 000 = '+fmt(Fv)+' м³');
+    tr.querySelector('.vG').textContent=fmt(Gv);
+    tr.querySelector('.vG').dataset.f=F('V внутренний, '+nm,'0,785 · '+n2(din)+'² · '+n2(L,1)+' / 1 000 000 = '+fmt(Gv)+' м³');
+    tr.querySelector('.vH').textContent=fmt(Hv);
+    tr.querySelector('.vH').dataset.f=F('V металла, '+nm,fmt(Fv)+' − '+fmt(Gv)+' = '+fmt(Hv)+' м³');
+    cF+=Fv;cG+=Gv;cH+=Hv;
+    if(L>0){cassec.push({nm:nm,d:d,din:din,top:cpos,bot:cpos+L});cpos+=L;}
+  });
+  $('cF').textContent=fmt(cF);$('cG').textContent=fmt(cG);$('cH').textContent=fmt(cH);
+  $('cG').dataset.f=F('Сумма внутренних объёмов колонн','= '+fmt(cG)+' м³ — объём колонны без инструмента');
+
+  /* открытый ствол */
+  let oV=0,oL=0,oParts=[],opensec=[],opos=bash;
+  $('tblOpen').querySelectorAll('tbody tr').forEach(tr=>{
+    const d=num(tr.querySelector('.d').value),L=num(tr.querySelector('.L').value);
+    const k=num(tr.querySelector('.k').value)||kDef;
+    const V=vol(d,L)*k;
+    tr.querySelector('.vV').textContent=fmt(V);
+    tr.querySelector('.vV').dataset.f=F('Объём интервала','0,785 · D² · L · k / 1 000 000<br>0,785 · '+n2(d)+'² · '+n2(L,1)+' · '+n2(k)+' / 1 000 000 = '+fmt(V)+' м³');
+    const lm=vol(d,1)*k*1000;
+    tr.querySelector('.vM').textContent=fmt(lm,2);
+    tr.querySelector('.vM').dataset.f=F('На погонный метр','0,785 · '+n2(d)+'² · '+n2(k)+' / 1000 = '+fmt(lm,2)+' л/м');
+    oV+=V;oL+=L;if(L>0){oParts.push(n2(d)+' мм × '+n2(L,1)+' м');opensec.push({d:d,k:k,top:opos,bot:opos+L,v:V});opos+=L;}
+  });
+  $('oV').textContent=fmt(oV);
+  $('oV').dataset.f=F('Объём открытого ствола','сумма интервалов'+(oParts.length?': '+oParts.join(', '):'')+'<br>= '+fmt(oV)+' м³');
+
+  /* предупреждения */
+  let w='';
+  if(os<0)w+='<div class="warn err">'+(isZ?'Низ окна':'Башмак')+' глубже забоя — проверьте исходные данные.</div>';
+  if(oL>0&&os>0&&Math.abs(oL-os)>0.5)
+    w+='<div class="warn">Сумма длин открытого ствола ('+fmt(oL,1)+' м) не совпадает с разностью «забой − '+bashName+'» ('+fmt(os,1)+' м).</div>';
+  $('openWarn').innerHTML=w;
+  let tw='';
+  
+  if(toolL>zab&&zab>0)tw+='<div class="warn err">Длина инструмента ('+fmt(toolL,1)+' м) больше забоя ('+fmt(zab,1)+' м).</div>';
+  if(bash>0&&sLc>0&&sLc>bash+0.5)tw+='<div class="warn">Длина инструмента в колонне ('+fmt(sLc,1)+' м) больше глубины '+bashName+'а ('+fmt(bash,1)+' м).</div>';
+  if(os>0&&sLo>os+0.5)tw+='<div class="warn">Длина инструмента в открытом стволе ('+fmt(sLo,1)+' м) больше длины открытого ствола ('+fmt(os,1)+' м).</div>';
+  $('toolWarn').innerHTML=tw;
+
+  /* итоги */
+  const VosBez=oV, VosS=VosBez-sN, VkBez=cG, VkS=VkBez-sJ;
+  const VskvBez=VosBez+VkBez, VskvS=VosS+VkS;
+  const Vprod=sG, Vpack=VskvS, Vcirc=Vprod+Vpack;
+  const tm=V=>Q>0?V*1000/(60*Q):NaN;
+  const tf=V=>'V · 1000 / (60 · подача)<br>'+fmt(V)+' · 1000 / (60 · '+n2(Q,1)+') = '+fmt(tm(V),1)+' мин';
+
+  $('r_vprod').innerHTML=fmt(Vprod)+'<small> м³</small>';
+  $('r_vprod').parentNode.dataset.f=F('V продавки','сумма внутренних объёмов бурильного инструмента = '+fmt(Vprod)+' м³');
+  $('r_tprod').innerHTML=fmt(tm(Vprod),1)+'<small> мин</small>';
+  $('r_tprod').parentNode.dataset.f=F('Время продавки',tf(Vprod));
+
+  const rows=[
+   ['hd','Объёмы без инструмента'],
+   ['V открытого ствола',VosBez,'м³',F('V открытого ствола без инструмента','сумма объёмов интервалов открытого ствола с коэффициентом кавернозности = '+fmt(VosBez)+' м³')],
+   ['V колонны',VkBez,'м³',F('V колонны без инструмента','сумма внутренних объёмов обсадных колонн = '+fmt(VkBez)+' м³')],
+   ['V скважины',VskvBez,'м³',F('V скважины без инструмента',fmt(VosBez)+' + '+fmt(VkBez)+' = '+fmt(VskvBez)+' м³')],
+   ['hd','Объёмы с инструментом (затрубное)'],
+   ['V открытого ствола',VosS,'м³',F('V открытого ствола с инструментом','Vоткр. ствола − Vнаруж. инструмента в открытом стволе<br>'+fmt(VosBez)+' − '+fmt(sN)+' = '+fmt(VosS)+' м³')],
+   ['V колонны',VkS,'м³',F('V колонны с инструментом','Vколонны − Vнаруж. инструмента в колонне<br>'+fmt(VkBez)+' − '+fmt(sJ)+' = '+fmt(VkS)+' м³')],
+   ['V скважины',VskvS,'м³',F('V скважины с инструментом',fmt(VosS)+' + '+fmt(VkS)+' = '+fmt(VskvS)+' м³')],
+   ['hd','Промывка'],
+   ['V продавки',Vprod,'м³',F('V продавки','сумма внутренних объёмов бурильного инструмента = '+fmt(Vprod)+' м³')],
+   ['Время продавки',tm(Vprod),'мин',F('Время продавки',tf(Vprod))],
+   ['V выхода забойной пачки',Vpack,'м³',F('V выхода забойной пачки','равен объёму скважины с инструментом = '+fmt(Vpack)+' м³')],
+   ['Время выхода забойной пачки',tm(Vpack),'мин',F('Время выхода забойной пачки',tf(Vpack))],
+   ['V циркуляции',Vcirc,'м³',F('V циркуляции','Vпродавки + Vвыхода забойной пачки<br>'+fmt(Vprod)+' + '+fmt(Vpack)+' = '+fmt(Vcirc)+' м³')],
+   ['Время циркуляции',tm(Vcirc),'мин',F('Время циркуляции',tf(Vcirc))]
+  ];
+  $('resMain').innerHTML=rows.map(r=>{
+    if(r[0]==='hd')return '<div class="hd">'+r[1]+'</div>';
+    const d=r[2]==='мин'?1:3;
+    return '<div class="k" data-f=\''+r[3]+'\'>'+r[0]+', '+r[2]+'</div>'+
+           '<div class="v '+(r[1]<0?'neg':'')+'" data-f=\''+r[3]+'\'>'+fmt(r[1],d)+'</div>';
+  }).join('');
+
+  const toolOuterIn=(a,b)=>segs.reduce((acc,sg)=>{
+    const L=Math.max(0,Math.min(sg.bot,b)-Math.max(sg.top,a));return acc+vol(sg.d,L);},0);
+  const annCas=(cassec||[]).filter(c=>c.top<bash).map(c=>{
+    const b2=Math.min(c.bot,bash),len=b2-c.top;
+    const full=vol(c.din,len),t=toolOuterIn(c.top,b2);
+    return{top:c.top,bot:b2,d:c.d,din:c.din,full:full,tool:t,v:full-t};});
+  const annOpen=opensec.map(o=>({top:o.top,bot:o.bot,d:o.d,full:o.v,
+    tool:toolOuterIn(o.top,o.bot),v:o.v-toolOuterIn(o.top,o.bot)}));
+  window.__V={skv:VskvS,skvBez:VskvBez,os:VosBez,kol:VkBez};
+  drawSchema(zab,bash,segs,isZ,cassec,{annCas:annCas,annOpen:annOpen,skv:VskvS,prod:Vprod,dol:sH});
+}
+
+/* ======== схема ======== */
+const SEGCOL=['#8FB6D6','#C9A227','#8FB6D6','#9E9E9E','#6E8FA8','#C9A227'];
+function drawSchema(zab,bash,segs,isZ,cassec,VV){
+  const box=$('schema');
+  const LT=false;
+  const C={bg:LT?'#F1F3F7':'#141518',cas:LT?'#E2E5EA':'#1D2025',open:LT?'#F7F1E2':'#1C1A14',
+    rock:LT?'#D9CCA9':'#2A2418',tx:LT?'#1D2126':'#E8EBEE',mu:LT?'#69727C':'#8B939D',
+    st:LT?'#8A6D2B':'#6E5A2C',ac:LT?'#B07C00':'#FFC72C'};
+  if(!(zab>0)){box.innerHTML='<p class="hint">Укажите забой, чтобы построить схему.</p>';return;}
+  const W=780,H=Math.max(470,120+segs.length*46),top=26,bot=H-26,cx=330;
+  const y=dep=>top+(Math.max(0,Math.min(dep,zab))/zab)*(bot-top);
+  const yBash=y(bash);
+  const winLen=isZ?WINLEN:0;
+  const yWinTop=y(Math.max(0,bash-winLen));
+  const casW=54,openW=44;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;font-family:system-ui,Arial,sans-serif">';
+  s+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="'+C.bg+'"/>';
+  /* обсадная колонна — секциями от устья до низа окна / башмака */
+  s+='<rect x="'+(cx-casW/2)+'" y="'+top+'" width="'+casW+'" height="'+(yBash-top)+'" fill="'+C.cas+'"/>';
+  s+='<rect x="'+(cx-casW/2-5)+'" y="'+top+'" width="5" height="'+(yBash-top)+'" fill="#B03A3A"/>';
+  s+='<rect x="'+(cx+casW/2)+'" y="'+top+'" width="5" height="'+(yBash-top)+'" fill="#B03A3A"/>';
+  const cs=(cassec||[]).filter(c=>c.top<bash);
+  cs.forEach(c=>{
+    const y1=y(c.top),y2=y(Math.min(c.bot,bash));
+    if(y2-y1>1.5){
+      s+='<line x1="'+(cx-casW/2-5)+'" y1="'+y2+'" x2="'+(cx+casW/2+5)+'" y2="'+y2+'" stroke="#E0A0A0" stroke-width="1.2" opacity=".8"/>';
+    }
+    const ym=(y1+y2)/2;
+    s+='<line x1="'+(cx-casW/2-6)+'" y1="'+ym+'" x2="'+(cx-118)+'" y2="'+ym+'" stroke="#B03A3A" opacity=".7"/>';
+    s+='<text x="'+(cx-122)+'" y="'+(ym-3)+'" text-anchor="end" fill="'+C.tx+'" font-size="12">ОК Ø'+fmt(c.d,1)+' мм</text>';
+    s+='<text x="'+(cx-122)+'" y="'+(ym+11)+'" text-anchor="end" fill="'+C.mu+'" font-size="10.5">Dвн '+fmt(c.din,1)+' · '+fmt(c.top,1)+'–'+fmt(Math.min(c.bot,bash),1)+' м</text>';
+  });
+  if(!cs.length){
+    s+='<text x="'+(cx-casW/2-14)+'" y="'+((top+yBash)/2)+'" text-anchor="end" fill="'+C.mu+'" font-size="11">обсадная колонна</text>';
+  }
+  /* открытый ствол */
+  s+='<rect x="'+(cx-openW/2)+'" y="'+yBash+'" width="'+openW+'" height="'+(bot-yBash)+'" fill="'+C.open+'" stroke="'+C.st+'" stroke-dasharray="4 3"/>';
+  s+='<rect x="'+(cx-openW/2-14)+'" y="'+yBash+'" width="14" height="'+(bot-yBash)+'" fill="'+C.rock+'"/>';
+  s+='<rect x="'+(cx+openW/2)+'" y="'+yBash+'" width="14" height="'+(bot-yBash)+'" fill="'+C.rock+'"/>';
+  /* окно / башмак */
+  if(isZ&&winLen>0){
+    s+='<rect x="'+(cx-casW/2-6)+'" y="'+yWinTop+'" width="'+(casW+12)+'" height="'+Math.max(3,yBash-yWinTop)+'" fill="none" stroke="'+C.ac+'" stroke-width="2"/>';
+  }
+  s+='<line x1="40" y1="'+yBash+'" x2="'+(W-20)+'" y2="'+yBash+'" stroke="'+C.ac+'" stroke-dasharray="5 4" opacity=".55"/>';
+  /* инструмент */
+  const labels=[];
+  segs.forEach((sg,i)=>{
+    const y1=y(sg.top),y2=y(sg.bot);
+    const wpx=Math.max(7,Math.min(30,sg.d*0.16));
+    const col=SEGCOL[i%SEGCOL.length];
+    s+='<rect x="'+(cx-wpx/2)+'" y="'+y1+'" width="'+wpx+'" height="'+Math.max(1.5,y2-y1)+'" fill="'+col+'" stroke="'+C.bg+'" stroke-width=".6"/>';
+    labels.push({y:(y1+y2)/2,col:col,
+      t:sg.nm+' — '+fmt(sg.L,1)+' м',
+      t2:'Ø'+fmt(sg.d,1)+' мм · '+fmt(sg.top,1)+'–'+fmt(sg.bot,1)+' м',
+      t3:'Vвн '+fmt(sg.vin)+' · Vнар '+fmt(sg.vout)+' · Vмет '+fmt(sg.vmet)+' м³'});
+  });
+  /* объёмы внутри труб и в затрубном пространстве */
+  const vtxt=(x,ym,txt,col,halo,size)=>'<text x="'+x+'" y="'+ym+'" fill="'+col+'" font-size="'+(size||10)+
+    '" text-anchor="middle" transform="rotate(-90 '+x+' '+ym+')" style="paint-order:stroke" stroke="'+halo+
+    '" stroke-width="2.5" stroke-linejoin="round">'+txt+'</text>';
+  segs.forEach((sg,i)=>{
+    const y1=y(sg.top),y2=y(sg.bot),ym=(y1+y2)/2;
+    const col=SEGCOL[i%SEGCOL.length];
+    if(y2-y1>=34)s+=vtxt(cx,ym,'Vвн '+fmt(sg.vin)+' м³','#101010',col,10);
+  });
+  (VV&&VV.annCas||[]).forEach(a=>{
+    const y1=y(a.top),y2=y(a.bot),ym=(y1+y2)/2;
+    if(y2-y1>=40)s+=vtxt(cx-casW/2+13,ym,'КП '+fmt(a.v)+' м³',C.ac,C.cas,10);
+  });
+  (VV&&VV.annOpen||[]).forEach(a=>{
+    const y1=y(a.top),y2=y(a.bot),ym=(y1+y2)/2;
+    if(y2-y1>=40)s+=vtxt(cx-openW/2+11,ym,'КП '+fmt(a.v)+' м³',C.ac,C.open,10);
+  });
+  /* выноски справа без наложения */
+  const lx=cx+120,tx=lx+12;let lastY=-99;
+  labels.forEach(L=>{
+    let ly=Math.max(L.y,lastY+42);lastY=ly;
+    s+='<line x1="'+(cx+16)+'" y1="'+L.y+'" x2="'+lx+'" y2="'+ly+'" stroke="'+L.col+'" opacity=".7"/>';
+    s+='<circle cx="'+(cx+16)+'" cy="'+L.y+'" r="2.5" fill="'+L.col+'"/>';
+    s+='<text x="'+tx+'" y="'+(ly-2)+'" fill="'+C.tx+'" font-size="12">'+L.t+'</text>';
+    s+='<text x="'+tx+'" y="'+(ly+12)+'" fill="'+C.mu+'" font-size="10.5">'+L.t2+'</text>';
+    s+='<text x="'+tx+'" y="'+(ly+25)+'" fill="'+C.ac+'" font-size="10.5">'+L.t3+'</text>';
+  });
+  /* подписи слева */
+  s+='<text x="'+(cx+casW/2+20)+'" y="'+(yBash-6)+'" fill="'+C.ac+'" font-size="11">'+(isZ?'Низ окна ':'Башмак ')+fmt(bash,1)+' м</text>';
+  s+='<text x="'+(cx-openW/2-20)+'" y="'+((yBash+bot)/2)+'" text-anchor="end" fill="'+C.mu+'" font-size="11">Открытый ствол</text>';
+  s+='<text x="'+(cx-openW/2-20)+'" y="'+(bot-4)+'" text-anchor="end" fill="'+C.mu+'" font-size="11">Забой '+fmt(zab,1)+' м</text>';
+  s+='<text x="'+(cx-casW/2-6)+'" y="'+(top-8)+'" text-anchor="end" fill="'+C.mu+'" font-size="11">Устье 0 м</text>';
+  s+='<line x1="40" y1="'+bot+'" x2="'+(W-20)+'" y2="'+bot+'" stroke="'+C.mu+'" opacity=".5"/>';
+  /* пласт */
+  s+='<rect x="'+(cx-openW/2-14)+'" y="'+bot+'" width="'+(openW+28)+'" height="16" fill="'+C.rock+'"/>';
+  if(VV){
+    const bx=W-232,by=top+2;
+    s+='<rect x="'+bx+'" y="'+by+'" width="222" height="56" fill="'+C.bg+'" stroke="'+C.mu+'" opacity=".92"/>';
+    s+='<text x="'+(bx+9)+'" y="'+(by+17)+'" fill="'+C.ac+'" font-size="10.5">V скважины с инструментом: '+fmt(VV.skv)+' м³</text>';
+    s+='<text x="'+(bx+9)+'" y="'+(by+33)+'" fill="'+C.tx+'" font-size="10.5">V продавки: '+fmt(VV.prod)+' м³</text>';
+    s+='<text x="'+(bx+9)+'" y="'+(by+49)+'" fill="'+C.mu+'" font-size="10.5">Долив без сифона: '+fmt(VV.dol)+' м³</text>';
+  }
+  s+='</svg>';
+  box.innerHTML=s;
+}
+
+/* ======== параметры бурового раствора ======== */
+function mudColors(){
+  const L=false;
+  return{bg:L?'#F1F3F7':'#141518',met:L?'#D6D6D6':'#262A30',met2:L?'#BFBFBF':'#3A4048',
+    mud:L?'#C9A227':'#9A7B32',liq:L?'#9CC3E4':'#41637F',tx:L?'#1D2126':'#E8EBEE',
+    mu:L?'#69727C':'#8B939D',ac:L?'#B07C00':'#FFC72C'};
+}
+function drawMudSvgs(){
+  const C=mudColors();
+  /* рычажные весы */
+  const b=$('svgBal'); if(b) b.innerHTML='<svg class="mudsvg" viewBox="0 0 300 200">'+
+    '<rect width="300" height="200" fill="'+C.bg+'"/>'+
+    '<rect x="30" y="150" width="150" height="12" rx="2" fill="'+C.met+'" stroke="'+C.met2+'"/>'+
+    '<path d="M96 150 v-46 h18 v46 z" fill="'+C.met+'" stroke="'+C.met2+'"/>'+
+    '<polygon points="105,96 96,110 114,110" fill="'+C.ac+'"/>'+
+    '<rect x="40" y="86" width="230" height="9" rx="3" fill="'+C.met+'" stroke="'+C.met2+'"/>'+
+    '<g stroke="'+C.mu+'">'+[0,1,2,3,4,5,6,7,8].map(i=>'<line x1="'+(130+i*15)+'" y1="86" x2="'+(130+i*15)+'" y2="'+(i%2?80:76)+'"/>').join('')+'</g>'+
+    '<rect x="188" y="78" width="12" height="18" rx="2" fill="'+C.ac+'"/>'+
+    '<text x="206" y="72" fill="'+C.ac+'" font-size="10">указатель</text>'+
+    '<rect x="52" y="60" width="46" height="30" rx="3" fill="'+C.mud+'" opacity=".65" stroke="'+C.met2+'"/>'+
+    '<rect x="58" y="52" width="34" height="9" rx="2" fill="'+C.met+'" stroke="'+C.met2+'"/>'+
+    '<text x="14" y="46" fill="'+C.tx+'" font-size="11">чаша с крышкой</text>'+
+    '<line x1="70" y1="50" x2="74" y2="30" stroke="'+C.mu+'"/>'+
+    '<ellipse cx="150" cy="118" rx="34" ry="9" fill="none" stroke="'+C.met2+'"/>'+
+    '<ellipse cx="150" cy="118" rx="9" ry="4.5" fill="'+C.ac+'" opacity=".85"/>'+
+    '<text x="192" y="122" fill="'+C.ac+'" font-size="10">пузырёк на балансире</text>'+
+    '<text x="192" y="134" fill="'+C.mu+'" font-size="9.5">уровень горизонтален</text>'+
+    '<text x="34" y="180" fill="'+C.mu+'" font-size="9.5">корпус основания с призмой</text></svg>';
+  /* воронка Марша */
+  const f=$('svgFunnel'); if(f) f.innerHTML='<svg class="mudsvg" viewBox="0 0 300 200">'+
+    '<rect width="300" height="200" fill="'+C.bg+'"/>'+
+    '<path d="M74 22 h108 l-42 92 h-24 z" fill="'+C.mud+'" opacity=".55" stroke="'+C.met2+'"/>'+
+    '<path d="M74 22 h108" stroke="'+C.met2+'" stroke-width="2"/>'+
+    '<line x1="80" y1="34" x2="176" y2="34" stroke="'+C.ac+'" stroke-dasharray="3 3"/>'+
+    '<text x="184" y="32" fill="'+C.ac+'" font-size="10">нижняя часть фильтра</text>'+
+    '<text x="184" y="44" fill="'+C.mu+'" font-size="9.5">заливают 1500 мл</text>'+
+    '<rect x="120" y="114" width="16" height="28" fill="'+C.met+'" stroke="'+C.met2+'"/>'+
+    '<circle cx="128" cy="148" r="4" fill="'+C.mud+'"/>'+
+    '<rect x="98" y="156" width="62" height="36" rx="3" fill="none" stroke="'+C.met2+'" stroke-width="2"/>'+
+    '<rect x="100" y="174" width="58" height="16" fill="'+C.mud+'" opacity=".6"/>'+
+    '<line x1="98" y1="174" x2="160" y2="174" stroke="'+C.ac+'"/>'+
+    '<text x="166" y="178" fill="'+C.ac+'" font-size="10">одна кварта — 946 мл</text>'+
+    '<text x="12" y="86" fill="'+C.tx+'" font-size="11">воронка</text>'+
+    '<text x="12" y="100" fill="'+C.tx+'" font-size="11">Марша</text>'+
+    '<text x="166" y="192" fill="'+C.mu+'" font-size="9.5">секундомер — время в секундах</text></svg>';
+  /* вискозиметр */
+  const v=$('svgVisc'); if(v) v.innerHTML='<svg class="mudsvg" viewBox="0 0 300 200">'+
+    '<rect width="300" height="200" fill="'+C.bg+'"/>'+
+    '<rect x="94" y="10" width="90" height="50" rx="4" fill="'+C.met+'" stroke="'+C.met2+'"/>'+
+    '<circle cx="139" cy="35" r="17" fill="none" stroke="'+C.ac+'" stroke-width="2"/>'+
+    '<line x1="139" y1="35" x2="151" y2="26" stroke="'+C.ac+'" stroke-width="2"/>'+
+    '<text x="192" y="28" fill="'+C.tx+'" font-size="11">шкала</text>'+
+    '<text x="192" y="42" fill="'+C.mu+'" font-size="10">600 / 300 / гель 3</text>'+
+    '<rect x="133" y="60" width="12" height="38" fill="'+C.met2+'"/>'+
+    '<rect x="104" y="98" width="70" height="64" fill="none" stroke="'+C.met2+'" stroke-width="2"/>'+
+    '<rect x="106" y="112" width="66" height="48" fill="'+C.mud+'" opacity=".5"/>'+
+    '<rect x="125" y="94" width="28" height="50" fill="none" stroke="'+C.ac+'" stroke-width="1.6"/>'+
+    '<line x1="104" y1="112" x2="174" y2="112" stroke="'+C.ac+'" stroke-dasharray="3 3"/>'+
+    '<text x="180" y="110" fill="'+C.ac+'" font-size="10">градуированная линия</text>'+
+    '<text x="180" y="122" fill="'+C.mu+'" font-size="9.5">внешнего цилиндра</text>'+
+    '<text x="12" y="130" fill="'+C.tx+'" font-size="11">роторная гильза</text>'+
+    '<text x="12" y="150" fill="'+C.tx+'" font-size="11">и внутренний</text>'+
+    '<text x="12" y="164" fill="'+C.tx+'" font-size="11">цилиндр</text>'+
+    '<line x1="104" y1="176" x2="174" y2="176" stroke="'+C.met2+'" stroke-width="3"/>'+
+    '<text x="180" y="180" fill="'+C.mu+'" font-size="9.5">проба нагрета до 49 °C</text></svg>';
+  /* фильтр-пресс */
+  const pr=$('svgPress'); if(pr) pr.innerHTML='<svg class="mudsvg" viewBox="0 0 300 200">'+
+    '<rect width="300" height="200" fill="'+C.bg+'"/>'+
+    '<rect x="104" y="8" width="72" height="18" rx="3" fill="'+C.met+'" stroke="'+C.met2+'"/>'+
+    '<text x="184" y="21" fill="'+C.mu+'" font-size="10">100 psi (690 кПа)</text>'+
+    '<polygon points="140,44 135,34 145,34" fill="'+C.ac+'"/>'+
+    '<line x1="140" y1="26" x2="140" y2="36" stroke="'+C.ac+'" stroke-width="2"/>'+
+    '<rect x="100" y="44" width="80" height="68" fill="none" stroke="'+C.met2+'" stroke-width="2"/>'+
+    '<rect x="102" y="56" width="76" height="54" fill="'+C.mud+'" opacity=".5"/>'+
+    '<line x1="102" y1="50" x2="178" y2="50" stroke="'+C.ac+'" stroke-dasharray="3 3"/>'+
+    '<text x="184" y="52" fill="'+C.ac+'" font-size="10">не доливать 13 мм</text>'+
+    '<line x1="100" y1="112" x2="180" y2="112" stroke="'+C.ac+'" stroke-width="3"/>'+
+    '<text x="186" y="112" fill="'+C.ac+'" font-size="10">бумага и корка</text>'+
+    '<path d="M140 116 v14" stroke="'+C.liq+'" stroke-width="2"/>'+
+    '<circle cx="140" cy="136" r="3" fill="'+C.liq+'"/>'+
+    '<rect x="118" y="142" width="44" height="48" rx="2" fill="none" stroke="'+C.met2+'" stroke-width="2"/>'+
+    '<rect x="120" y="168" width="40" height="20" fill="'+C.liq+'" opacity=".6"/>'+
+    '<text x="168" y="172" fill="'+C.tx+'" font-size="11">фильтрат</text>'+
+    '<text x="168" y="186" fill="'+C.mu+'" font-size="10">за 30 минут, мл</text>'+
+    '<text x="12" y="80" fill="'+C.tx+'" font-size="11">ячейка</text></svg>';
+}
+function calcMud(){
+  const kv=(t,v,f)=>'<div class="k"'+(f?' data-f="'+f+'"':'')+'>'+t+'</div><div class="v"'+(f?' data-f="'+f+'"':'')+'>'+v+'</div>';
+  /* плотность и показатель безопасности */
+  const r1=num($('m_r1').value),H=num($('m_h').value),ppl=num($('m_ppl').value),pgrp=num($('m_pgrp').value);
+  const pgs=r1*H*0.1;
+  const zap=ppl>0?(pgs-ppl)/ppl*100:NaN;
+  const roMin=H>0?ppl*1.05/(H*0.1):NaN;
+  const roMax=H>0&&pgrp>0?pgrp/(H*0.1):NaN;
+  $('m_res0').innerHTML=
+    kv('Гидростатическое давление, кгс/см²',fmt(pgs,1),F('Гидростатика','ρ · H · 0,1 = '+n2(r1,3)+' · '+n2(H,1)+' · 0,1 = '+n2(pgs,1)+' кгс/см²'))+
+    kv('Показатель безопасности, %',fmt(zap,1),F('Показатель безопасности','(Pгидростатическое − Pпластовое) / Pпластовое · 100<br>('+n2(pgs,1)+' − '+n2(ppl,1)+') / '+n2(ppl,1)+' · 100 = '+n2(zap,1)+' %<br>по методике — не менее 5 %'))+
+    kv('Минимальная плотность (запас 5 %), г/см³',fmt(roMin,3),F('Минимальная плотность','Pпластовое · 1,05 / (H · 0,1) = '+n2(roMin,3)+' г/см³'))+
+    kv('Максимальная плотность по гидроразрыву, г/см³',fmt(roMax,3),F('Максимальная плотность','Pгидроразрыва / (H · 0,1) = '+n2(roMax,3)+' г/см³'));
+  let w0='';
+  if(isFinite(zap)&&zap<5&&ppl>0)w0+='<div class="warn err">Показатель безопасности '+fmt(zap,1)+' % — меньше требуемых 5 %.</div>';
+  if(isFinite(roMax)&&r1>roMax&&pgrp>0)w0+='<div class="warn err">Плотность выше давления гидроразрыва — риск поглощения.</div>';
+  $('m_warn0').innerHTML=w0;
+
+  /* утяжеление и разбавление */
+  const r2=num($('m_r2').value),V=num($('m_vol').value),rb=num($('m_rb').value)||4.2,rw=num($('m_rw').value)||1;
+  const kgm3=(rb>r2&&r2>r1)?1000*rb*(r2-r1)/(rb-r2):NaN;
+  const dV=kgm3/(rb*1000);
+  $('m_res1').innerHTML=
+    kv('Утяжелителя на 1 м³, кг',fmt(kgm3,1),F('Расход утяжелителя','1000 · ρут · (ρ2 − ρ1) / (ρут − ρ2)<br>1000 · '+n2(rb)+' · ('+n2(r2,3)+' − '+n2(r1,3)+') / ('+n2(rb)+' − '+n2(r2,3)+') = '+n2(kgm3,1)+' кг'))+
+    kv('На весь объём, т',fmt(kgm3*V/1000,2),'')+
+    kv('Прирост объёма, м³',fmt(dV*V,2),F('Прирост объёма','утяжелитель увеличивает объём раствора — учитывайте ёмкости'));
+  const vw=(r1>r2&&r2>rw)?V*(r1-r2)/(r2-rw):NaN;
+  $('m_res2').innerHTML=
+    kv('Воды на разбавление, м³',fmt(vw,2),F('Разбавление','V · (ρ1 − ρ2) / (ρ2 − ρводы) = '+n2(vw,2)+' м³'))+
+    kv('Объём после разбавления, м³',fmt(V+vw,2),'');
+
+  /* реология */
+  const t600=num($('m_600').value),t300=num($('m_300').value);
+  const PV=t600-t300, YP=2*t300-t600;
+  const g10s=num($('m_g10s').value),g10m=num($('m_g10m').value);
+  $('m_res3').innerHTML=
+    kv('Пластическая вязкость, мПа·с (сП)',fmt(PV,1),F('Пластическая вязкость','разница показаний при 600 и 300 об/мин<br>'+n2(t600,1)+' − '+n2(t300,1)+' = '+n2(PV,1)+' мПа·с'))+
+    kv('ДНС, фунт/100 фут²',fmt(YP,1),F('Динамическое напряжение сдвига','удвоенное показание при 300 минус показание при 600<br>2 · '+n2(t300,1)+' − '+n2(t600,1)+' = '+n2(YP,1)+'<br>то же самое: показание при 300 минус ПВ'))+
+    kv('ДНС, Па',fmt(YP*0.4788,2),F('ДНС в паскалях','1 фунт/100 фут² = 0,4788 Па<br>'+n2(YP,1)+' · 0,4788 = '+n2(YP*0.4788,2)+' Па'))+
+    kv('СНС 10 сек, фунт/100 фут²',fmt(g10s,1),F('СНС за 10 секунд','максимальное показание при 3 об/мин после 10 секунд покоя'))+
+    kv('СНС 10 мин, фунт/100 фут²',fmt(g10m,1),F('СНС за 10 минут','максимальное показание при 3 об/мин после 10 минут покоя'))+
+    kv('Прирост структуры за 10 минут',fmt(g10m-g10s,1),F('Прирост СНС','разница между 10 минутами и 10 секундами — скорость образования структуры'))+
+    kv('ДНС / ПВ',fmt(PV>0?YP/PV:NaN,2),F('Отношение ДНС к ПВ','рост ПВ при неизменном ДНС означает накопление твёрдой фазы'));
+
+  /* фильтрация */
+  const f30=num($('m_f30').value),cake=num($('m_cake').value);
+  $('m_res4').innerHTML=
+    kv('Водоотдача за 30 мин, см³',fmt(f30,1),F('Водоотдача','объём фильтрата за 30 минут при 100 psi'))+
+    kv('Толщина корки, мм',fmt(cake,2),'')+
+    kv('Коэффициент трения корки',fmt(num($('m_ktk').value),3),F('Коэффициент трения','снимается на устройстве КТК по корке с фильтра'))+
+    kv('Оценка по нормам',(f30>0?(f30<=5?'в пределах для осложнённых условий':(f30<=25?'в пределах для нормальных глинистых растворов':'выше нормы')):'—'),
+       F('Нормы','для нормальных глинистых растворов — до 10–25 см³ за 30 мин при корке 1–2 мм;<br>в осложнённых условиях — 5 см³ и менее'));
+
+  /* МБТ */
+  const mbt=num($('m_mbt').value),mbtv=num($('m_mbtv').value)||2;
+  const cec=mbtv>0?mbt/mbtv*14.25:NaN;
+  $('m_res5').innerHTML=
+    kv('Эквивалент бентонита, кг/м³',fmt(cec,1),F('Пересчёт МБТ','объём метиленового синего / объём пробы · 14,25<br>'+n2(mbt,2)+' / '+n2(mbtv,1)+' · 14,25 = '+n2(cec,1)+' кг/м³'))+
+    kv('Ёмкость катионного обмена, мл/мл',fmt(mbtv>0?mbt/mbtv:NaN,2),F('Катионообменная ёмкость','отношение объёма метиленового синего к объёму пробы'));
+
+  /* химанализ */
+  const vf=num($('m_vf').value)||1,ag=num($('m_agno3').value),ver=num($('m_ver').value);
+  const cl=vf>0?ag*1000/vf:NaN, ca=vf>0?ver*400/vf:NaN;
+  $('m_res6').innerHTML=
+    kv('Хлориды Cl⁻, мг/л',fmt(cl,0),F('Хлориды','мл нитрата серебра · 1000 / мл фильтрата<br>'+n2(ag,2)+' · 1000 / '+n2(vf,1)+' = '+n2(cl,0)+' мг/л (для 0,0282 н AgNO₃)'))+
+    kv('Общая жёсткость по кальцию, мг/л',fmt(ca,0),F('Общая жёсткость','мл версената · 400 / мл фильтрата<br>'+n2(ver,2)+' · 400 / '+n2(vf,1)+' = '+n2(ca,0)+' мг/л'))+
+    kv('Pf / Mf, мл',$('m_pfmf').value||'—',F('Щёлочность фильтрата','Pf — до обесцвечивания фенолфталеина, Mf — суммарно с титрованием по метилоранжу'));
+  drawMudSvgs();
+}
+
+/* ======== контроль ввода ======== */
+function validate(d){
+  const mark=(id,bad)=>{const el=$(id);if(el)el.classList.toggle('bad',!!bad);};
+  const errs=[];
+  mark('zaboy',!(d.zab>0));
+  mark('bashmak',d.bash<0||(d.zab>0&&d.bash>d.zab));
+  mark('podacha',$('podacha').value!==''&&!(d.Q>0));
+  if(d.zab>0&&d.bash>d.zab)errs.push('глубина низа окна / башмака больше забоя');
+  if(d.zab>0&&d.toolL>d.zab)errs.push('длина инструмента больше забоя');
+  if(d.bash>0&&d.sLc>d.bash+0.5)errs.push('длина инструмента в колонне больше глубины низа окна / башмака');
+  if(d.os>0&&d.sLo>d.os+0.5)errs.push('длина инструмента в открытом стволе больше длины открытого ствола');
+  $('tblTool').querySelectorAll('tbody tr').forEach(tr=>{
+    const t=num(tr.querySelector('.t').value),dd=num(tr.querySelector('.d').value);
+    const bad=dd>0&&(dd-2*t)<=0;
+    tr.querySelector('.t').classList.toggle('bad',bad);
+    tr.querySelector('.d').classList.toggle('bad',bad);
+    if(bad)errs.push('толщина стенки больше половины диаметра трубы');
+  });
+  const pb=$('printBtn');
+  if(errs.length){pb.disabled=true;pb.title='Печать заблокирована: '+errs.join('; ');}
+  else{pb.disabled=false;pb.title='';}
+  const box=$('valWarn');
+  if(box)box.innerHTML=errs.length?'<div class="warn err">Проверьте данные: '+[...new Set(errs)].join('; ')+'. Печать заблокирована до исправления.</div>':'';
+}
+
+/* ======== долив и вытеснение ======== */
+function calcDol(){
+  const d=num($('dl_d').value), met=num($('dl_met').value);
+  const L=num($('dl_len').value), sv=num($('dl_sv').value);
+  const out=0.785*d*d/1000;          /* наружный объём, л/м */
+  const inn=out-met;                 /* внутренний объём, л/м */
+  const up=met*L/1000, dn=met*L/1000;
+  const upS=out*L/1000;
+  $('dl_up').innerHTML=fmt(up,3)+'<small> м³</small>';
+  $('dl_up').parentNode.dataset.f=F('Долив при подъёме','объём металла · длина<br>'+n2(met,2)+' л/м · '+n2(L,1)+' м = '+fmt(up,3)+' м³<br>труба поднимается с открытым концом — освобождается объём металла');
+  $('dl_dn').innerHTML=fmt(dn,3)+'<small> м³</small>';
+  $('dl_dn').parentNode.dataset.f=F('Вытеснение при спуске','объём металла · длина = '+fmt(dn,3)+' м³<br>труба идёт с открытым концом — вытесняется объём металла');
+  const kv=(t,v,f)=>'<div class="k"'+(f?' data-f="'+f+'"':'')+'>'+t+'</div><div class="v"'+(f?' data-f="'+f+'"':'')+'>'+v+'</div>';
+  $('resFill').innerHTML=
+    kv('Долив / вытеснение на 1 м, л',fmt(met,2),F('На один метр','равно объёму металла трубы — '+n2(met,2)+' л/м'))+
+    kv('Долив / вытеснение на свечу, л',fmt(met*sv,2),F('На свечу','объём металла · длина свечи<br>'+n2(met,2)+' · '+n2(sv,1)+' = '+n2(met*sv,2)+' л'))+
+    kv('С закрытым концом (с сифоном), м³',fmt(upS,3),F('Закрытый конец','наружный объём трубы · длина<br>0,785 · '+n2(d,1)+'² / 1000 = '+n2(out,2)+' л/м · '+n2(L,1)+' м = '+fmt(upS,3)+' м³'))+
+    kv('Наружный объём, л/м',fmt(out,2),F('Наружный объём','0,785 · D² / 1000 = 0,785 · '+n2(d,1)+'² / 1000 = '+n2(out,2)+' л/м'))+
+    kv('Внутренний объём, л/м',fmt(inn,2),F('Внутренний объём','наружный объём − объём металла<br>'+n2(out,2)+' − '+n2(met,2)+' = '+n2(inn,2)+' л/м'))+
+    (inn<0&&d>0&&met>0?'<div class="hd" style="color:var(--red)">Объём металла больше наружного объёма — проверьте данные</div>':'');
+}
+
+/* ======== гидравлика и глушение ======== */
+function pullHydro(){
+  const g=id=>$(id).value;
+  if(!$('h_q').value)$('h_q').value=g('podacha');
+  if(!$('h_tvd').value)$('h_tvd').value=g('zaboy');
+  const t=$('tblTool').querySelectorAll('tbody tr');
+  let lt=0,dt=0,dtn=0;
+  t.forEach(tr=>{const l=num(tr.querySelector('.lc').value)+num(tr.querySelector('.lo').value);
+    if(l>lt){lt=l;dtn=num(tr.querySelector('.d').value);dt=dtn-2*num(tr.querySelector('.t').value);}});
+  if(lt>0){$('h_lt').value=fmt(lt,1);$('h_dt').value=fmt(dt,1);$('h_dtn').value=fmt(dtn,1);}
+  const c=$('tblCas').querySelectorAll('tbody tr');
+  if(c.length){const last=c[c.length-1];
+    $('h_dk1').value=fmt(num(last.querySelector('.d').value)-2*num(last.querySelector('.t').value),1);}
+  $('h_lk1').value=$('bashmak').value;
+  const o=$('tblOpen').querySelectorAll('tbody tr');
+  if(o.length){$('h_dk2').value=o[0].querySelector('.d').value;$('h_lk2').value=o[0].querySelector('.L').value;
+    if(!$('h_dn').value)$('h_dn').value='';}
+  calcHydro();
+}
+function dpPipe(lam,L,D,Q,ro){        /* Дарси — Вейсбах, D в мм, ответ в атм */
+  if(!(D>0&&L>0&&Q>0))return 0;
+  const A=Math.PI*Math.pow(D/1000,2)/4, v=(Q/1000)/A;
+  return lam*(L/(D/1000))*(ro*1000)*v*v/2/101325;
+}
+function dpAnn(lam,L,D1,D2,Q,ro){     /* кольцевое: D1 внешн., D2 внутр. трубы */
+  if(!(D1>D2&&L>0&&Q>0))return 0;
+  const A=0.785*(D1*D1-D2*D2)/1e6, v=(Q/1000)/A, dh=(D1-D2)/1000;
+  return lam*(L/dh)*(ro*1000)*v*v/2/101325;
+}
+function calcHydro(){
+  const ro=num($('h_ro').value),tvd=num($('h_tvd').value),dpk=num($('h_dpk').value),ppl=num($('h_ppl').value);
+  const pgs=ro*0.0981*tvd;
+  const ecd=tvd>0?ro+dpk/(0.0981*tvd):NaN;
+  const rows1=[
+   ['Гидростатическое давление',pgs,'атм',F('Гидростатика','ρ · 0,0981 · H<br>'+n2(ro)+' · 0,0981 · '+n2(tvd,1)+' = '+n2(pgs)+' атм')],
+   ['То же в МПа',pgs*0.0981/1.0*0.101325/0.0981*0,'',''],
+   ['ЭЦП',ecd,'г/см³',F('Эквивалентная циркуляционная плотность','ρ + ΔPкп / (0,0981 · H)<br>'+n2(ro)+' + '+n2(dpk)+' / (0,0981 · '+n2(tvd,1)+') = '+n2(ecd,3)+' г/см³')],
+   ['Репрессия на пласт',pgs-ppl,'атм',F('Репрессия','Pгидростатическое − Pпластовое<br>'+n2(pgs)+' − '+n2(ppl)+' = '+n2(pgs-ppl)+' атм')]
+  ].filter(r=>r[2]);
+  $('h_res1').innerHTML=rows1.map(r=>'<div class="k" data-f=\''+r[3]+'\'>'+r[0]+', '+r[2]+'</div>'+
+    '<div class="v '+(r[1]<0?'neg':'')+'" data-f=\''+r[3]+'\'>'+fmt(r[1],r[2]==='г/см³'?3:2)+'</div>').join('');
+
+  const Q=num($('h_q').value),nn=num($('h_nn').value),dn=num($('h_dn').value),mu=num($('h_mu').value)||0.95;
+  const Fn=nn*Math.PI*Math.pow(dn/1000,2)/4;
+  const vj=Fn>0?(Q/1000)/(mu*Fn):NaN;
+  const dpd=Fn>0?(ro*1000)*vj*vj/2/101325:NaN;
+  const Nkw=isFinite(dpd)?dpd*101325*(Q/1000)/1000:NaN;
+  const rows2=[
+   ['Суммарная площадь насадок',Fn*1e6,'мм²',F('Площадь насадок','n · π · d² / 4<br>'+n2(nn,0)+' · π · '+n2(dn)+'² / 4 = '+n2(Fn*1e6)+' мм²')],
+   ['Скорость истечения',vj,'м/с',F('Скорость истечения','Q / (μ · F)<br>'+n2(Q,1)+' / 1000 / ('+n2(mu)+' · '+fmt(Fn,6)+') = '+n2(vj,1)+' м/с')],
+   ['Перепад на долоте',dpd,'атм',F('Перепад давления на долоте','ρ · v² / 2<br>'+n2(ro)+' · 1000 · '+n2(vj,1)+'² / 2 = '+n2(dpd)+' атм ('+n2(dpd*0.0981,2)+' МПа)')],
+   ['Гидравлическая мощность',Nkw,'кВт',F('Гидравлическая мощность на долоте','ΔP · Q = '+n2(Nkw,1)+' кВт')]
+  ];
+  $('h_res2').innerHTML=rows2.map(r=>'<div class="k" data-f=\''+r[3]+'\'>'+r[0]+', '+r[2]+'</div>'+
+    '<div class="v" data-f=\''+r[3]+'\'>'+fmt(r[1],r[2]==='мм²'?1:2)+'</div>').join('');
+
+  const lam=num($('h_lam').value)||0.02;
+  const dpt=dpPipe(lam,num($('h_lt').value),num($('h_dt').value),Q,ro);
+  const dpk1=dpAnn(lam,num($('h_lk1').value),num($('h_dk1').value),num($('h_dtn').value),Q,ro);
+  const dpk2=dpAnn(lam,num($('h_lk2').value),num($('h_dk2').value),num($('h_dtn').value),Q,ro);
+  const sum=dpt+dpk1+dpk2+(isFinite(dpd)?dpd:0);
+  const rows3=[
+   ['Потери в бурильных трубах',dpt,F('Потери в трубах','λ · (L / d) · ρ · v² / 2 = '+n2(dpt)+' атм')],
+   ['Потери в КП в колонне',dpk1,F('Потери в кольцевом пространстве колонны','λ · (L / dг) · ρ · v² / 2 = '+n2(dpk1)+' атм, dг = Dкол − Dтр')],
+   ['Потери в КП в открытом стволе',dpk2,F('Потери в кольцевом пространстве открытого ствола','λ · (L / dг) · ρ · v² / 2 = '+n2(dpk2)+' атм')],
+   ['Перепад на долоте',isFinite(dpd)?dpd:0,F('Перепад на долоте','из расчёта выше = '+n2(dpd||0)+' атм')],
+   ['Суммарные потери в затрубье',dpk1+dpk2,F('Потери в затрубье','сумма потерь КП — это значение подставляется в расчёт ЭЦП: '+n2(dpk1+dpk2)+' атм')]
+  ];
+  $('h_res3').innerHTML=rows3.map(r=>'<div class="k" data-f=\''+r[2]+'\'>'+r[0]+', атм</div>'+
+    '<div class="v" data-f=\''+r[2]+'\'>'+fmt(r[1],2)+'</div>').join('');
+  $('h_pump').innerHTML=fmt(sum,1)+'<small> атм / '+fmt(sum*0.0981,1)+' МПа</small>';
+  $('h_pump').parentNode.dataset.f=F('Давление на насосе','сумма потерь по циркуляционной системе<br>'+
+    n2(dpt)+' + '+n2(dpk1)+' + '+n2(dpk2)+' + '+n2(dpd||0)+' = '+n2(sum)+' атм');
+
+
+}
+
+/* ======== пересчёт единиц ======== */
+function conv(src){
+  const g=id=>num($(id).value),set=(id,v)=>{if($(id)!==document.activeElement)$(id).value=isFinite(v)&&v!==0?fmt(v,4):'';};
+  if(['atm','mpa','bar','psi'].indexOf(src)>=0){
+    let atm=0;
+    if(src==='atm')atm=g('u_atm');else if(src==='mpa')atm=g('u_mpa')/0.0980665;
+    else if(src==='bar')atm=g('u_bar')/0.980665;else atm=g('u_psi')/14.2233;
+    set('u_atm',atm);set('u_mpa',atm*0.0980665);set('u_bar',atm*0.980665);set('u_psi',atm*14.2233);
+  }else if(['ls','m3h','m3m','lm'].indexOf(src)>=0){
+    let ls=0;
+    if(src==='ls')ls=g('u_ls');else if(src==='m3h')ls=g('u_m3h')/3.6;
+    else if(src==='m3m')ls=g('u_m3m')*1000/60;else ls=g('u_lm')/60;
+    set('u_ls',ls);set('u_m3h',ls*3.6);set('u_m3m',ls*60/1000);set('u_lm',ls*60);
+  }else if(['gcm','kgm'].indexOf(src)>=0){
+    const gcm=src==='gcm'?g('u_gcm'):g('u_kgm')/1000;
+    set('u_gcm',gcm);set('u_kgm',gcm*1000);
+  }else{
+    const m=src==='m'?g('u_m'):g('u_ft')/3.28084;
+    set('u_m',m);set('u_ft',m*3.28084);
+  }
+}
+
+/* ======== опрессовка ======== */
+function calcPress(){
+  const h=num($('p_h').value),rw=num($('p_rw').value),rm=num($('p_rm').value),p=num($('p_p').value);
+  const gw=rw*0.0981*h,gm=rm*0.0981*h,res=p-(gm-gw);
+  $('p_res').innerHTML=fmt(res,2)+'<small> атм</small>';
+  $('p_res').parentNode.dataset.f=F('Давление опрессовки на БР','Pв − (ρбр · 0,0981 · H − ρв · 0,0981 · H)<br>'+
+    n2(p)+' − ('+n2(gm)+' − '+n2(gw)+') = '+n2(res)+' атм');
+  $('p_detail').innerHTML=
+   '<div class="k" data-f="'+F('Гидростатика тех. воды','ρ · 0,0981 · H = '+n2(rw)+' · 0,0981 · '+n2(h,2)+' = '+n2(gw)+' атм')+'">Гидростатика тех. воды, атм</div><div class="v">'+n2(gw)+'</div>'+
+   '<div class="k" data-f="'+F('Гидростатика бурового раствора','ρ · 0,0981 · H = '+n2(rm)+' · 0,0981 · '+n2(h,2)+' = '+n2(gm)+' атм')+'">Гидростатика бурового раствора, атм</div><div class="v">'+n2(gm)+'</div>'+
+   '<div class="k">Разница давлений, атм</div><div class="v">'+n2(gm-gw)+'</div>'+
+   '<div class="k">Давление опрессовки на БР, атм</div><div class="v '+(res<0?'neg':'')+'">'+n2(res)+'</div>';
+}
+
+/* ======== справочник ======== */
+function buildRef(){
+  let h='';
+  BITS.forEach(d=>{
+    const b=vol(d,1)*1000;
+    h+='<tr><td>'+String(d).replace('.',',')+'</td>'+
+       '<td class="calc" data-f="'+F('Объём на 1 м','0,785 · '+n2(d)+'² / 1000 = '+fmt(b,2)+' л/м')+'">'+fmt(b,2)+'</td>'+
+       '<td class="calc">'+fmt(b*1.10,2)+'</td><td class="calc">'+fmt(b*1.15,2)+'</td><td class="calc">'+fmt(b*1.25,2)+'</td></tr>';
+  });
+  $('refOpen').querySelector('tbody').innerHTML=h;
+
+  const row=p=>{
+    const din=p.d-2*p.t,vn=vol(p.d,1)*1000,vv=vol(din,1)*1000;
+    return '<tr><td>'+p.n+' ('+String(p.t).replace('.',',')+')</td>'+
+     '<td class="dim" data-f="'+F('Внутренний диаметр',n2(p.d)+' − 2 · '+n2(p.t)+' = '+n2(din)+' мм')+'">'+fmt(din,2)+'</td>'+
+     '<td class="calc" data-f="'+F('V наружный','0,785 · '+n2(p.d)+'² / 1000 = '+fmt(vn,2)+' л/м')+'">'+fmt(vn,2)+'</td>'+
+     '<td class="calc" data-f="'+F('V внутренний','0,785 · '+n2(din)+'² / 1000 = '+fmt(vv,2)+' л/м')+'">'+fmt(vv,2)+'</td>'+
+     '<td class="calc" data-f="'+F('V металла',fmt(vn,2)+' − '+fmt(vv,2)+' = '+fmt(vn-vv,2)+' л/м')+'">'+fmt(vn-vv,2)+'</td></tr>';
+  };
+  $('refCas').querySelector('tbody').innerHTML=CASINGS.map(row).join('');
+  $('refPipe').querySelector('tbody').innerHTML=PIPES.map(row).join('');
+
+  $('refPipeSel').innerHTML=PIPES.map((p,i)=>'<option value="'+i+'"'+(p.n==='СБТ-88,9'&&p.t===8?' selected':'')+'>'+p.n+' ('+String(p.t).replace('.',',')+')</option>').join('');
+  buildAnn();calcAnn();
+}
+function calcAnn(){
+  const D=num($('an_D').value),d=num($('an_d').value),L=num($('an_L').value),k=num($('an_k').value)||1;
+  const lm=0.785*(D*D-d*d)/1000*k;
+  const V=lm*L/1000;
+  const kv=(t,v,f)=>'<div class="k"'+(f?' data-f="'+f+'"':'')+'>'+t+'</div><div class="v"'+(f?' data-f="'+f+'"':'')+'>'+v+'</div>';
+  $('an_res').innerHTML=
+    kv('Объём затруба, л/м',fmt(lm,2),F('Объём кольцевого пространства','0,785 · (D² − d²) / 1000 · k<br>0,785 · ('+n2(D,1)+'² − '+n2(d,1)+'²) / 1000 · '+n2(k)+' = '+n2(lm,2)+' л/м'))+
+    kv('Объём на интервал, м³',fmt(V,3),F('Объём на интервал',n2(lm,2)+' л/м · '+n2(L,1)+' м / 1000 = '+fmt(V,3)+' м³'))+
+    kv('Зазор на сторону, мм',fmt((D-d)/2,1),F('Зазор','(D − d) / 2 = ('+n2(D,1)+' − '+n2(d,1)+') / 2 = '+n2((D-d)/2,1)+' мм'))+
+    (lm<=0&&D>0&&d>0?'<div class="hd" style="color:var(--red)">Диаметр трубы больше внешнего — проверьте данные</div>':'');
+}
+function buildAnn(){
+  const p=PIPES[$('refPipeSel').value||0];
+  let h='';
+  BITS.forEach(d=>{
+    const v=0.785*(d*d-p.d*p.d)/1000;
+    const bad=v<=0;
+    h+='<tr><td>'+String(d).replace('.',',')+'</td>'+
+      '<td class="calc" data-f="'+F('Кольцевое пространство','0,785 · ('+n2(d)+'² − '+n2(p.d)+'²) / 1000 = '+fmt(v,2)+' л/м')+'">'+(bad?'—':fmt(v,2))+'</td>'+
+      '<td class="calc" data-f="'+F('С кавернозностью 1,25',fmt(v,2)+' · 1,25 = '+fmt(v*1.25,2)+' л/м')+'">'+(bad?'—':fmt(v*1.25,2))+'</td></tr>';
+  });
+  $('refAnnOpen').querySelector('tbody').innerHTML=h;
+  h='';
+  CASINGS.forEach(c=>{
+    const din=c.d-2*c.t,v=0.785*(din*din-p.d*p.d)/1000;
+    h+='<tr><td>'+c.n+' ('+String(c.t).replace('.',',')+') · Dвн '+fmt(din,1)+'</td>'+
+      '<td class="calc" data-f="'+F('Кольцевое пространство','0,785 · ('+n2(din)+'² − '+n2(p.d)+'²) / 1000 = '+fmt(v,2)+' л/м')+'">'+(v<=0?'—':fmt(v,2))+'</td></tr>';
+  });
+  $('refAnnCas').querySelector('tbody').innerHTML=h;
+}
+
+/* ======== бурение горизонта и ГГД ======== */
+function calcDrill(){
+  const pr=num($('g_pr').value),tg=num($('g_t').value),sm=num($('g_sm').value),su=num($('g_su').value);
+  const zs=num($('g_zs').value),zd=num($('g_zd').value);
+  const v=tg>0?pr/tg:NaN;
+  const psm=v*sm,psu=v*su;
+  const r2=[
+   ['Скорость по ГГД',v,'м/ч',F('Скорость по ГГД','проходка / время<br>'+n2(pr,1)+' / '+n2(tg,2)+' = '+n2(v,3)+' м/ч')],
+   ['Проходка на смену',psm,'м',F('Проходка на смену','скорость · часы смены<br>'+n2(v,3)+' · '+n2(sm,1)+' = '+n2(psm,1)+' м')],
+   ['Забой на конец смены',zs+psm,'м',F('Забой на конец смены',n2(zs,1)+' + '+n2(psm,1)+' = '+n2(zs+psm,1)+' м')],
+   ['Проходка на сутки',psu,'м',F('Проходка на сутки','скорость · часы суток<br>'+n2(v,3)+' · '+n2(su,1)+' = '+n2(psu,1)+' м')],
+   ['Забой на конец суток',zd+psu,'м',F('Забой на конец суток',n2(zd,1)+' + '+n2(psu,1)+' = '+n2(zd+psu,1)+' м')]
+  ];
+  $('d_res2').innerHTML=r2.map(r=>'<div class="k" data-f=\''+r[3]+'\'>'+r[0]+', '+r[2]+'</div>'+
+    '<div class="v" data-f=\''+r[3]+'\'>'+fmt(r[1],r[2]==='м/ч'?3:1)+'</div>').join('');
+}
+
+/* ======== НПВ ======== */
+function addNpv(name,a,b){
+  const tr=document.createElement('tr');
+  tr.innerHTML='<td data-l="Причина"><input class="nm" value="'+(name||'')+'" placeholder="например: ремонт ВБ-160" oninput="calcNpv()"></td>'+
+    '<td data-l="Начало"><input class="a" type="datetime-local" value="'+(a||'')+'" oninput="calcNpv()"></td>'+
+    '<td data-l="Конец"><input class="b" type="datetime-local" value="'+(b||'')+'" oninput="calcNpv()"></td>'+
+    '<td data-l="Время, ч" class="calc h">—</td><td data-l="Время, сут." class="calc d">—</td>'+
+    '<td class="act"><button class="btn xs danger" onclick="this.closest(\'tr\').remove();calcNpv()">✕</button></td>';
+  $('tblNpv').querySelector('tbody').appendChild(tr);calcNpv();
+}
+function calcNpv(){
+  let sh=0;
+  $('tblNpv').querySelectorAll('tbody tr').forEach(tr=>{
+    const a=tr.querySelector('.a').value,b=tr.querySelector('.b').value;
+    let h=0;
+    if(a&&b){h=(new Date(b)-new Date(a))/3600000;if(!isFinite(h))h=0;}
+    tr.querySelector('.h').textContent=a&&b?fmt(h,2):'—';
+    tr.querySelector('.h').dataset.f=F('Время НПВ','(конец − начало) в часах = '+fmt(h,2)+' ч');
+    tr.querySelector('.d').textContent=a&&b?fmt(h/24,3):'—';
+    tr.querySelector('.d').dataset.f=F('Время НПВ в сутках',fmt(h,2)+' / 24 = '+fmt(h/24,3)+' сут.');
+    sh+=h;
+  });
+  $('npv_h').textContent=fmt(sh,2);
+  $('npv_h').dataset.f=F('Общее НПВ','сумма по всем интервалам = '+fmt(sh,2)+' ч');
+  $('npv_d').textContent=fmt(sh/24,3);
+  $('npv_d').dataset.f=F('Общее НПВ в сутках',fmt(sh,2)+' / 24 = '+fmt(sh/24,3)+' сут.');
+}
+
+/* ======== сохранение ======== */
+function collect(){
+  const g=(tbl,f)=>[...$(tbl).querySelectorAll('tbody tr')].map(tr=>{
+    const o={};f.forEach(k=>o[k]=tr.querySelector('.'+k)?tr.querySelector('.'+k).value:'');return o;});
+  return{mode:$('mode').value,zaboy:$('zaboy').value,bashmak:$('bashmak').value,
+    podacha:$('podacha').value,kaver:$('kaver').value,
+    dol:{d:$('dl_d').value,met:$('dl_met').value,len:$('dl_len').value,sv:$('dl_sv').value},
+
+    tool:g('tblTool',['nm','t','d','lc','lo']),cas:g('tblCas',['nm','t','d','L']),open:g('tblOpen',['d','L','k']),
+    press:{h:$('p_h').value,rw:$('p_rw').value,rm:$('p_rm').value,p:$('p_p').value}};
+}
+function saveFile(){
+  const b=new Blob([JSON.stringify(collect(),null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download='скважина-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function loadFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);clearAll();
+      $('mode').value=d.mode||'zbs';
+      $('zaboy').value=d.zaboy||'';$('bashmak').value=d.bashmak||'';
+      $('podacha').value=d.podacha||'';$('kaver').value=d.kaver||'';
+      setMode();
+      (d.tool||[]).forEach(t=>addTool(t.nm,t.t,t.d,t.lc,t.lo));
+      (d.cas||[]).forEach(c=>addCas(c.nm,c.t,c.d,c.L));
+      (d.open||[]).forEach(o=>addOpen(o.d,o.L,o.k));
+      if(d.dol){$('dl_d').value=d.dol.d||'';$('dl_met').value=d.dol.met||'';
+        $('dl_len').value=d.dol.len||'';$('dl_sv').value=d.dol.sv||'';calcDol();}
+
+      if(d.press){$('p_h').value=d.press.h;$('p_rw').value=d.press.rw;$('p_rm').value=d.press.rm;$('p_p').value=d.press.p;}
+      calcMud();
+
+      calc();calcPress();
+    }catch(err){alert('Файл не читается: '+err.message);}
+    e.target.value='';
+  };
+  r.readAsText(f);
+}
+
+/* ======== установка как приложение ======== */
+function registerSW(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(function(e){console.log('SW:',e);});
+  }
+}
+function initPWA(){
+  try{
+    const icon='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 132" width="512" height="512">'+
+      '<rect width="120" height="132" fill="#08090A"/>'+
+      '<g fill="#FFC72C"><rect x="42" y="52" width="10" height="72"/><rect x="54" y="44" width="10" height="80"/><rect x="66" y="52" width="10" height="72"/></g>'+
+      '<g fill="#EDEDED"><rect x="6" y="56" width="10" height="42"/><rect x="18" y="42" width="10" height="56"/><rect x="30" y="30" width="10" height="68"/>'+
+      '<rect x="42" y="20" width="10" height="78"/><rect x="54" y="12" width="10" height="86"/><rect x="66" y="20" width="10" height="78"/>'+
+      '<rect x="78" y="30" width="10" height="68"/><rect x="90" y="42" width="10" height="56"/><rect x="102" y="56" width="10" height="42"/></g></svg>')));
+    const man={name:'Расчёт объёмов скважины',short_name:'Скважина',display:'standalone',
+      background_color:'#08090A',theme_color:'#08090A',start_url:location.href,scope:'./',
+      icons:[{src:icon,sizes:'512x512',type:'image/svg+xml',purpose:'any'}]};
+    const l=document.createElement('link');l.rel='manifest';
+    l.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'}));
+    document.head.appendChild(l);
+    const a=document.createElement('link');a.rel='apple-touch-icon';a.href=icon;document.head.appendChild(a);
+  }catch(e){}
+}
+
+/* ======== старт ======== */
+const dl=document.createElement('datalist');dl.id='bitlist';
+dl.innerHTML=BITS.map(b=>'<option value="'+b+'">').join('');document.body.appendChild(dl);
+loadPreset('zbs');
+buildTabs();safeCalc();calcDol();calcPress();buildRef();calcHydro();calcMud();registerSW();
+addNpv();calcDrill();
+</script>
+</body>
+</html>
