@@ -8,7 +8,7 @@
 
    ВАЖНО: менять номер версии ниже при каждой правке приложения.
    ================================================================ */
-const CACHE = 'well-calc-v10';
+const CACHE = 'well-calc-v13';
 const FILES = ['index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-1024.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

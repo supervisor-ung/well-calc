@@ -1,6 +1,6 @@
 {
-  "name": "Расчёт объёмов скважины",
-  "short_name": "Скважина",
+  "name": "Памятка бурового супервайзера",
+  "short_name": "Супервайзер",
   "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
