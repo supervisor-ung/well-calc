@@ -311,7 +311,10 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
     letter-spacing:.05em;text-align:left;flex:0 1 auto;min-width:0}
   table.cards td:empty{display:none}
   table.cards td input,table.cards td select{flex:0 1 56%;width:auto;min-width:90px;text-align:right}
-  table.cards td.calc,table.cards td.dim{font-size:13.5px;white-space:nowrap}
+  table.cards td{flex-wrap:wrap}
+  table.cards td.calc{font-size:13.5px;white-space:nowrap}
+  table.cards td.dim{font-size:13.5px;white-space:normal;overflow-wrap:anywhere}
+  table.cards td>*{min-width:0}
   .res .k{padding-right:8px}
   .big div{padding:13px 14px}
   table.cards td.act{justify-content:flex-end}
@@ -1068,6 +1071,12 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
 </section>
 
 <section class="tab" id="tab-stuck">
+  <div class="subtabs" id="stuckSub">
+    <button class="on" onclick="stuckSub(0)">Прихват</button>
+    <button onclick="stuckSub(1)">Установка ванны</button>
+  </div>
+
+<div class="subpane on" id="stuckPane0">
 
   <div class="panel">
     <h2>Определение типа прихвата</h2>
@@ -1159,6 +1168,30 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
     </div>
   </div>
 
+  <div class="panel">
+    <h2>Записать обстановку
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="copyStuck()">Скопировать</button>
+      <button class="btn sm" onclick="nowStuck()">Время сейчас</button>
+    </h2>
+    <div class="body">
+      <div class="grid4">
+        <label class="f"><span>Время прихвата</span><input id="st_time" oninput="0"></label>
+        <label class="f"><span>Глубина инструмента, м</span><input id="st_md" inputmode="decimal"></label>
+        <label class="f"><span>Глубина забоя, м</span><input id="st_zab" inputmode="decimal"></label>
+        <label class="f"><span>Собственный вес, тс</span><input id="st_sv" inputmode="decimal"></label>
+        <label class="f"><span>Вес на крюке после, тс</span><input id="st_w2" inputmode="decimal"></label>
+        <label class="f"><span>Давление, кгс/см²</span><input id="st_p" inputmode="decimal"></label>
+        <label class="f"><span>Подача, л/с</span><input id="st_q" inputmode="decimal"></label>
+        <label class="f"><span>Момент на устье, кН·м</span><input id="st_m" inputmode="decimal"></label>
+      </div>
+      <div id="st_copy"></div>
+      <p class="hint">Эти данные потребуются при расчёте места прихвата, для доклада и при разборе. Кнопка «Скопировать» кладёт их в буфер обмена одной строкой.</p>
+    </div>
+  </div>
+</div>
+
+<div class="subpane" id="stuckPane1">
   <div class="panel">
     <h2>Расчёт ванны — исходные данные
       <span style="flex:1"></span>
@@ -1292,27 +1325,8 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
     </div>
   </div>
 
-  <div class="panel">
-    <h2>Записать обстановку
-      <span style="flex:1"></span>
-      <button class="btn sm" onclick="copyStuck()">Скопировать</button>
-      <button class="btn sm" onclick="nowStuck()">Время сейчас</button>
-    </h2>
-    <div class="body">
-      <div class="grid4">
-        <label class="f"><span>Время прихвата</span><input id="st_time" oninput="0"></label>
-        <label class="f"><span>Глубина инструмента, м</span><input id="st_md" inputmode="decimal"></label>
-        <label class="f"><span>Глубина забоя, м</span><input id="st_zab" inputmode="decimal"></label>
-        <label class="f"><span>Собственный вес, тс</span><input id="st_sv" inputmode="decimal"></label>
-        <label class="f"><span>Вес на крюке после, тс</span><input id="st_w2" inputmode="decimal"></label>
-        <label class="f"><span>Давление, кгс/см²</span><input id="st_p" inputmode="decimal"></label>
-        <label class="f"><span>Подача, л/с</span><input id="st_q" inputmode="decimal"></label>
-        <label class="f"><span>Момент на устье, кН·м</span><input id="st_m" inputmode="decimal"></label>
-      </div>
-      <div id="st_copy"></div>
-      <p class="hint">Эти данные потребуются при расчёте места прихвата, для доклада и при разборе. Кнопка «Скопировать» кладёт их в буфер обмена одной строкой.</p>
-    </div>
-  </div>
+</div>
+
 </section>
 
 <section class="tab" id="tab-rope">
@@ -1346,8 +1360,6 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
         <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
         <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
       </div>
-      <div class="big" id="rkBig"></div>
-      <div id="rkWarn"></div>
     </div>
   </div>
 
@@ -1370,6 +1382,14 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
       </div>
       <p class="hint">Вес на крюке — вес инструмента без талевого блока. При спуске обсадной колонны берётся вес на конечной глубине.
       Строка «Перепуск - Перетяжка» обнуляет счёт до перепуска и прибавляет длину перепуска.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Итог по наработке</h2>
+    <div class="body">
+      <div class="big" id="rkBig"></div>
+      <div id="rkWarn"></div>
     </div>
   </div>
 
@@ -1607,6 +1627,15 @@ function mudSub(n){
   box.querySelectorAll('button').forEach((b,k)=>b.classList.toggle('on',k===n));
   [0,1].forEach(k=>{const el=$('mudPane'+k);if(el)el.classList.toggle('on',k===n);});
   if(typeof drawMudSvgs==='function')drawMudSvgs();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ======== подвкладки прихвата ======== */
+function stuckSub(n){
+  const box=$('stuckSub'); if(!box)return;
+  box.querySelectorAll('button').forEach((b,k)=>b.classList.toggle('on',k===n));
+  [0,1].forEach(k=>{const el=$('stuckPane'+k);if(el)el.classList.toggle('on',k===n);});
+  if(n===1&&typeof vnDrawF==='function')vnDrawF();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
