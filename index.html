@@ -356,7 +356,7 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
   </svg>
   <div>
     <h1>Памятка бурового супервайзера</h1>
-    <div class="sub">Объёмы · цементаж · буровой раствор · аварийность · v2.8</div>
+    <div class="sub">Объёмы · цементаж · буровой раствор · аварийность · v3.0</div>
   </div>
   <div class="spacer"></div>
   <div class="hbtns">
@@ -386,6 +386,7 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
   <button data-tab="sov">Итоговое совещание</button>
   <button data-tab="cem">Цементаж</button>
   <button data-tab="stuck">Прихваты</button>
+  <button data-tab="rope">Талевый канат</button>
   <button data-tab="drill">Бурение и НПВ</button>
   <button data-tab="ref">Справочник</button>
 </nav>
@@ -1314,6 +1315,80 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
   </div>
 </section>
 
+<section class="tab" id="tab-rope">
+
+  <div class="panel">
+    <h2>Бухта каната
+      <span style="flex:1"></span>
+      <button class="btn sm danger" onclick="rkClear()">Очистить</button>
+    </h2>
+    <div class="body">
+      <div class="grid4">
+        <label class="f"><span>Тип БУ</span><input id="rk_bu" placeholder="МБУ 140" oninput="calcRope()"></label>
+        <label class="f"><span>Оснастка</span><input id="rk_osn" placeholder="4×5" oninput="calcRope()"></label>
+        <label class="f"><span>Производитель</span><input id="rk_man" value="ММК-МЕТИЗ" oninput="calcRope()"></label>
+        <label class="f"><span>ГОСТ / ТУ</span><input id="rk_gost" value="ГОСТ 16853-88" oninput="calcRope()"></label>
+        <label class="f"><span>Диаметр каната, мм</span><input id="rk_d" value="28" inputmode="decimal" oninput="calcRope()"></label>
+        <label class="f"><span>Конструкция / сердечник</span><input id="rk_konstr" placeholder="6×26 / ОС" oninput="calcRope()"></label>
+        <label class="f"><span>Дата установки бухты</span><input id="rk_date" type="date" oninput="calcRope()"></label>
+        <label class="f"><span>№ бухты (сертификата)</span><input id="rk_num" oninput="calcRope()"></label>
+        <label class="f"><span>Каната в бухте, м</span><input id="rk_all" placeholder="1200" inputmode="decimal" oninput="calcRope()"></label>
+        <label class="f"><span>В оснастке БУ, м</span><input id="rk_osnL" placeholder="380" inputmode="decimal" oninput="calcRope()"></label>
+      </div>
+      <p class="hint" style="margin:8px 0 6px;color:var(--yellow)">Параметры расчёта</p>
+      <div class="grid4">
+        <label class="f"><span>Вес талевого блока + вертлюг / ВСП, т</span><input id="rk_M" placeholder="3.45" inputmode="decimal" oninput="calcRope()"></label>
+        <label class="f"><span>Длина свечи, м</span><input id="rk_Ls" placeholder="19" inputmode="decimal" oninput="calcRope()"></label>
+        <label class="f"><span>Предыдущая наработка на бухту, т·км</span><input id="rk_prev" placeholder="0" inputmode="decimal" oninput="calcRope()"></label>
+        <label class="f"><span>Длина перепуска, м</span><input id="rk_slip" placeholder="160" inputmode="decimal" oninput="calcRope()"></label>
+        <label class="f"><span>Норма до перепуска, т·км</span><input id="rk_normSlip" placeholder="1800" inputmode="decimal" oninput="calcRope()"></label>
+        <label class="f"><span>Норма на бухту (отбраковка), т·км</span><input id="rk_normAll" placeholder="8000" inputmode="decimal" oninput="calcRope()"></label>
+        <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
+        <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
+      </div>
+      <div class="big" id="rkBig"></div>
+      <div id="rkWarn"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Журнал операций
+      <span style="flex:1"></span>
+      <button class="btn sm pri" onclick="rkAdd()">+ Операция</button>
+      <button class="btn sm" onclick="rkAdd('Перепуск - Перетяжка')">+ Перепуск</button>
+      <button class="btn sm" onclick="rkCopy()">Скопировать</button>
+      <button class="btn sm danger" onclick="rkClearOps()">Очистить журнал</button>
+    </h2>
+    <div class="body">
+      <div class="tscroll" style="max-height:520px;overflow-y:auto">
+        <table class="cards" id="tblRope">
+          <thead><tr><th>№</th><th>Дата</th><th style="min-width:150px">Вид работ</th>
+            <th>Lн, м</th><th>Lк, м</th><th>Проработок</th><th>Вес в начале, т</th><th>Вес в конце, т</th>
+            <th>За операцию, т·км</th><th>До перепуска, т·км</th><th>На бухту, т·км</th><th>Перепуск, м</th><th class="act"></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="hint">Вес на крюке — вес инструмента без талевого блока. При спуске обсадной колонны берётся вес на конечной глубине.
+      Строка «Перепуск - Перетяжка» обнуляет счёт до перепуска и прибавляет длину перепуска.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Как считается</h2>
+    <div class="body">
+      <p class="hint" style="color:var(--text);font-size:13px;margin:0 0 8px">Работа каната на глубине L при весе на крюке P:</p>
+      <p class="formula" style="margin:0 0 10px">T(L, P) = [ (Lсв + L) · P + 4 · L · M ] / 1000, т·км<br>
+      где Lсв — длина свечи, м · P — вес инструмента, т · M — вес талевого блока с вертлюгом, т</p>
+      <p class="hint" style="color:var(--text);font-size:13px;margin:0 0 6px">Наработка за операцию — разность работ на конечной и начальной глубине с коэффициентом вида работ:</p>
+      <div class="tscroll"><table class="cards" id="tblRopeK">
+        <thead><tr><th style="min-width:190px">Вид работ</th><th>Коэффициент</th><th>Пояснение</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="hint">Методика соответствует API RP 9B: подъём и спуск — половина кругового рейса, бурение — три рейса
+      (два плюс проработки), отбор керна — два, спуск обсадной колонны — половина рейса от конечной глубины.</p>
+    </div>
+  </div>
+</section>
+
 <section class="tab" id="tab-drill">
   <div class="grid2">
     
@@ -1507,6 +1582,7 @@ const TABICONS={
   hydro:'<circle cx="12" cy="13" r="7.2"/><path d="M12 13l3.4-3.6"/><path d="M12 5.8V3.4"/><path d="M5.6 7.2 4.2 5.8"/><path d="M18.4 7.2l1.4-1.4"/>',
   mud:'<path d="M10 3h4"/><path d="M10.8 3v6.2L6.4 17.4A2.4 2.4 0 0 0 8.5 21h7a2.4 2.4 0 0 0 2.1-3.6l-4.4-8.2V3"/><path d="M8.2 15.4h7.6"/>',
   press:'<rect x="6" y="4" width="12" height="16" rx="2.4"/><path d="M12 8.4v7.2"/><path d="M9.4 11l2.6-2.6L14.6 11"/>',
+  rope:'<circle cx="12" cy="12" r="8.4"/><path d="M12 3.6c3 3.4 3 13.4 0 16.8"/><path d="M12 3.6c-3 3.4-3 13.4 0 16.8"/><path d="M3.6 12h16.8"/>',
   drill:'<path d="M5 20h14"/><path d="M12 3 6.6 20"/><path d="M12 3l5.4 17"/><path d="M8.6 12.6h6.8"/><path d="M12 3v17"/>',
   sov:'<path d="M4 20h16"/><rect x="6" y="12" width="3.4" height="8"/><rect x="11.6" y="7" width="3.4" height="13"/><rect x="17.2" y="3.6" width="3.4" height="16.4"/>',
   cem:'<path d="M7 4h10"/><path d="M9 4v5.6L5.4 19a2 2 0 0 0 1.8 2.8h9.6A2 2 0 0 0 18.6 19L15 9.6V4"/><path d="M7.6 15h8.8"/>',
@@ -2228,6 +2304,153 @@ function calcCem(){
       '<td data-l="Отметка" class="dim" style="font-size:11px;color:'+(mark?'var(--yellow)':'var(--muted)')+'">'+(mark||'—')+'</td></tr>';
   });
   $('tblCem').querySelector('tbody').innerHTML=h;
+}
+
+/* ======== талевый канат ======== */
+const RKOPS=[
+ {n:'Подъем',k:0.5,d:'половина кругового рейса'},
+ {n:'Спуск',k:0.5,d:'половина кругового рейса'},
+ {n:'СПО',k:1,d:'полный круговой рейс'},
+ {n:'Технологическое СПО',k:1,d:'полный круговой рейс'},
+ {n:'Бурение',k:'2+X',d:'два рейса плюс по одному на каждую проработку'},
+ {n:'Шаблонировка',k:'1+X',d:'один рейс плюс проработки'},
+ {n:'Отбор керна',k:2,d:'два рейса'},
+ {n:'Аварийные работы',k:2,d:'два рейса — расхаживание, отбивка, работа с ясом'},
+ {n:'Спуск обсадной колонны',k:'0,5 от конечной',d:'половина рейса, считается от конечной глубины'},
+ {n:'Перепуск - Перетяжка',k:0,d:'наработка не начисляется, счёт до перепуска обнуляется'}
+];
+let RK=[];
+function rkWork(L,P){
+  const Ls=num($('rk_Ls').value), M=num($('rk_M').value);
+  return ((Ls+L)*P + 4*L*M)/1000;                 /* т·км */
+}
+function rkCoef(op,x){
+  if(op==='Бурение')return 2+x;
+  if(op==='Шаблонировка')return 1+x;
+  const f=RKOPS.filter(o=>o.n===op)[0];
+  return f&&typeof f.k==='number'?f.k:0;
+}
+function rkOpVal(r){
+  const L1=num(r.l1),L2=num(r.l2),P1=num(r.p1),P2=num(r.p2),x=num(r.x);
+  if(r.op==='Перепуск - Перетяжка')return 0;
+  if(r.op==='Спуск обсадной колонны')return rkWork(L2,P2)*0.5;
+  return Math.abs(rkWork(L2,P2)-rkWork(L1,P1))*rkCoef(r.op,x);
+}
+function rkAdd(op){
+  const last=RK.length?RK[RK.length-1]:null;
+  RK.push({dt:'',op:op||'Спуск',l1:last?last.l2:'',l2:'',x:'',p1:last?last.p2:'',p2:'',
+           slip:op==='Перепуск - Перетяжка'?($('rk_slip').value||''):''});
+  rkDraw();calcRope();
+}
+function rkEdit(i,k,v){
+  if(!RK[i])return;
+  RK[i][k]=v;
+  if(k==='op'){rkDraw();calcRope();}            /* смена вида работ — перерисовываем строку */
+  else{rkCells();calcRope(true);}               /* цифры — обновляем только расчётные ячейки, поле не теряет фокус */
+}
+function rkCells(){
+  const tb=$('tblRope')&&$('tblRope').querySelector('tbody'); if(!tb)return;
+  let cumS=0,cumA=num($('rk_prev').value);
+  [...tb.querySelectorAll('tr')].forEach((tr,i)=>{
+    const r=RK[i]; if(!r)return;
+    const v=rkOpVal(r);
+    if(r.op==='Перепуск - Перетяжка'){cumS=0;}else{cumS+=v;cumA+=v;}
+    const td=tr.querySelectorAll('td');
+    if(td[8])td[8].textContent=fmt(v,1);
+    if(td[9])td[9].textContent=fmt(cumS,0);
+    if(td[10])td[10].textContent=fmt(cumA,0);
+  });
+}
+function rkDel(i){ RK.splice(i,1);rkDraw();calcRope(); }
+function rkClearOps(){ if(!confirm('Очистить журнал операций?'))return; RK=[];rkDraw();calcRope(); }
+function rkClear(){
+  ['rk_bu','rk_osn','rk_num','rk_date','rk_konstr'].forEach(id=>{if($(id))$(id).value='';});
+  $('rk_prev').value='';calcRope();
+}
+function rkDraw(){
+  const tb=$('tblRope')&&$('tblRope').querySelector('tbody'); if(!tb)return;
+  if(!RK.length){
+    tb.innerHTML='<tr><td colspan="13" style="text-align:center;color:var(--muted)">журнал пуст — добавьте первую операцию</td></tr>';
+    return;
+  }
+  let cumS=0,cumA=num($('rk_prev').value);
+  tb.innerHTML=RK.map((r,i)=>{
+    const v=rkOpVal(r);
+    if(r.op==='Перепуск - Перетяжка'){cumS=0;}else{cumS+=v;cumA+=v;}
+    const isSlip=r.op==='Перепуск - Перетяжка';
+    const sel='<select onchange="rkEdit('+i+',&quot;op&quot;,this.value)">'+
+      RKOPS.map(o=>'<option'+(o.n===r.op?' selected':'')+'>'+o.n+'</option>').join('')+'</select>';
+    const inp=(k,ph)=>'<input value="'+(r[k]||'')+'" inputmode="decimal" placeholder="'+(ph||'')+
+      '" oninput="rkEdit('+i+',&quot;'+k+'&quot;,this.value)">';
+    return '<tr'+(isSlip?' style="background:rgba(255,199,44,.10)"':'')+'>'+
+      '<td data-l="№" class="dim">'+(i+1)+'</td>'+
+      '<td data-l="Дата"><input type="date" value="'+(r.dt||'')+'" oninput="rkEdit('+i+',&quot;dt&quot;,this.value)"></td>'+
+      '<td data-l="Вид работ">'+sel+'</td>'+
+      '<td data-l="Lн, м">'+(isSlip?'':inp('l1'))+'</td>'+
+      '<td data-l="Lк, м">'+(isSlip?'':inp('l2'))+'</td>'+
+      '<td data-l="Проработок">'+((r.op==='Бурение'||r.op==='Шаблонировка')?inp('x','0'):'<span class="dim">—</span>')+'</td>'+
+      '<td data-l="Вес в начале, т">'+(isSlip?'':inp('p1'))+'</td>'+
+      '<td data-l="Вес в конце, т">'+(isSlip?'':inp('p2'))+'</td>'+
+      '<td data-l="За операцию" class="calc">'+fmt(v,1)+'</td>'+
+      '<td data-l="До перепуска" class="calc">'+fmt(cumS,0)+'</td>'+
+      '<td data-l="На бухту" class="dim">'+fmt(cumA,0)+'</td>'+
+      '<td data-l="Перепуск, м">'+(isSlip?inp('slip'):'<span class="dim">—</span>')+'</td>'+
+      '<td class="act"><button class="btn xs danger" onclick="rkDel('+i+')">✕</button></td></tr>';
+  }).join('');
+}
+function calcRope(noDraw){
+  const kt=$('tblRopeK')&&$('tblRopeK').querySelector('tbody');
+  if(kt)kt.innerHTML=RKOPS.map(o=>'<tr><td data-l="Вид работ">'+o.n+'</td>'+
+    '<td data-l="Коэффициент" class="calc">'+(typeof o.k==='number'?fmt(o.k,1):o.k)+'</td>'+
+    '<td data-l="Пояснение" class="dim" style="font-size:12px">'+o.d+'</td></tr>').join('');
+  if(!noDraw)rkDraw();
+  let cumS=0,total=num($('rk_prev').value),slipped=0,nSlip=0;
+  RK.forEach(r=>{
+    const v=rkOpVal(r);
+    if(r.op==='Перепуск - Перетяжка'){cumS=0;slipped+=num(r.slip);nSlip++;}
+    else{cumS+=v;total+=v;}
+  });
+  const normS=num($('rk_normSlip').value), normA=num($('rk_normAll').value);
+  const all=num($('rk_all').value), osn=num($('rk_osnL').value);
+  const rest=all-osn-slipped;
+  const toSlip=normS-cumS, pct=normA>0?total/normA*100:NaN;
+  $('rkBig').innerHTML=
+    '<div data-f="'+F('Наработка до перепуска','сумма наработки после последнего перепуска = '+n2(cumS,0)+' т·км')+
+      '"><div class="l">До перепуска</div><div class="n" style="color:'+(toSlip<0?'var(--red)':'#FFD75E')+'">'+
+      fmt(cumS,0)+'<small> из '+fmt(normS,0)+' т·км</small></div></div>'+
+    '<div data-f="'+F('Наработка на бухту','предыдущая наработка + сумма по журналу = '+n2(total,0)+' т·км')+
+      '"><div class="l">Всего на бухту</div><div class="n">'+fmt(total,0)+'<small> т·км</small></div></div>'+
+    '<div><div class="l">Ресурс выработан</div><div class="n" style="color:'+(pct>=100?'var(--red)':'#FFD75E')+'">'+
+      fmt(pct,0)+'<small> %</small></div></div>'+
+    '<div data-f="'+F('Остаток каната','в бухте − в оснастке − перепущено<br>'+n2(all,0)+' − '+n2(osn,0)+' − '+n2(slipped,0)+' = '+n2(rest,0)+' м')+
+      '"><div class="l">Остаток на барабане</div><div class="n" style="color:'+(rest<0?'var(--red)':'#FFD75E')+'">'+
+      fmt(rest,0)+'<small> м</small></div></div>';
+  let w='';
+  if(toSlip<=0&&normS>0)w+='<div class="warn err">Норма до перепуска выработана ('+fmt(cumS,0)+' из '+fmt(normS,0)+' т·км) — требуется перепуск-перетяжка.</div>';
+  else if(normS>0&&toSlip<normS*0.1)w+='<div class="warn">До перепуска осталось '+fmt(toSlip,0)+' т·км — планируйте перетяжку.</div>';
+  if(normA>0&&total>=normA)w+='<div class="warn err">Наработка на бухту достигла нормы отбраковки ('+fmt(normA,0)+' т·км) — канат подлежит замене.</div>';
+  if(rest<num($('rk_slip').value)&&all>0)w+='<div class="warn err">Остатка на барабане ('+fmt(rest,0)+' м) не хватит на следующий перепуск — готовьте новую бухту.</div>';
+  if(nSlip>0)w+='<div class="warn">Выполнено перепусков: '+nSlip+', перепущено суммарно '+fmt(slipped,0)+' м.</div>';
+  w+='<div class="warn">Визуальный осмотр каната имеет приоритет над расчётом: при обрывах проволок, коррозии или деформации канат бракуется независимо от наработки.</div>';
+  $('rkWarn').innerHTML=w;
+}
+function rkCopy(){
+  if(!RK.length){alert('Журнал пуст.');return;}
+  let cumS=0,total=num($('rk_prev').value);
+  let t='НАРАБОТКА НА ТАЛЕВЫЙ КАНАТ\n'+($('rk_bu').value||'')+' · '+($('rk_man').value||'')+' Ø'+
+    ($('rk_d').value||'')+' '+($('rk_gost').value||'')+'\n';
+  RK.forEach((r,i)=>{
+    const v=rkOpVal(r);
+    if(r.op==='Перепуск - Перетяжка'){cumS=0;t+='\n'+(i+1)+'. Перепуск-перетяжка '+(r.slip||'')+' м';}
+    else{cumS+=v;total+=v;
+      t+='\n'+(i+1)+'. '+r.op+' '+(r.l1||0)+'→'+(r.l2||0)+' м, '+fmt(v,1)+' т·км';}
+  });
+  t+='\n\nДо перепуска: '+fmt(cumS,0)+' т·км\nВсего на бухту: '+fmt(total,0)+' т·км';
+  const done=()=>{const el=$('rkWarn');if(el)el.insertAdjacentHTML('afterbegin','<div class="warn">Скопировано в буфер</div>');};
+  function fb(){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+    ta.select();try{document.execCommand('copy');done();}catch(e){alert(t);}document.body.removeChild(ta);}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done).catch(fb);
+  else fb();
 }
 
 /* ======== расчёт ванны ======== */
@@ -3093,7 +3316,7 @@ function registerSW(){
 const dl=document.createElement('datalist');dl.id='bitlist';
 dl.innerHTML=BITS.map(b=>'<option value="'+b+'">').join('');document.body.appendChild(dl);
 loadPreset('zbs');
-buildTabs();initStuck();initVanna();vnDrawF();calcVanna();calcCem();calcSov();safeCalc();calcDol();calcPress();buildRef();calcHydro();calcMud();registerSW();
+buildTabs();initStuck();initVanna();vnDrawF();calcVanna();calcRope();calcCem();calcSov();safeCalc();calcDol();calcPress();buildRef();calcHydro();calcMud();registerSW();
 restoreLocal();
 addNpv();calcDrill();
 </script>
