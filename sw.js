@@ -1,55 +1,86 @@
-/* ================================================================
-   Сервис-воркер: приложение работает офлайн и само обновляется.
+/* ============================================================
+   Памятка бурового супервайзера — service worker
+   Стратегия: network-first для страницы, cache-first для статики.
+   При каждом обновлении приложения поднимайте VERSION на единицу —
+   это заставит браузер выкинуть старый кэш и забрать новый файл.
+   ============================================================ */
 
-   Стратегия:
-   - index.html и manifest.json — сначала сеть, при её отсутствии кэш.
-     Значит новая версия приезжает сама при первом запуске со связью.
-   - иконки — сразу из кэша, они не меняются.
+const VERSION = 'v1';
+const CACHE = 'well-calc-' + VERSION;
 
-   ВАЖНО: менять номер версии ниже при каждой правке приложения.
-   ================================================================ */
-const CACHE = 'well-calc-v25';
-const FILES = ['index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-1024.png', 'apple-touch-icon.png'];
+/* Пути относительные — приложение живёт в подкаталоге
+   (github.io/well-calc/), абсолютные '/...' указали бы в корень домена. */
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
+];
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+/* ---------- установка ---------- */
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(cache => cache.addAll(ASSETS))
+      /* если одна иконка отсутствует — не валим всю установку */
+      .catch(err => console.warn('SW: часть файлов не закэширована', err))
+      .then(() => self.skipWaiting())
+  );
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
+/* ---------- активация: чистим старые версии ---------- */
+self.addEventListener('activate', event => {
+  event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+      ))
       .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  const url = new URL(e.request.url);
-  const isPage = e.request.mode === 'navigate'
-    || url.pathname.endsWith('/')
-    || url.pathname.endsWith('index.html')
-    || url.pathname.endsWith('manifest.json');
+/* ---------- перехват запросов ---------- */
+self.addEventListener('fetch', event => {
+  const req = event.request;
 
-  if (isPage) {
-    // сначала сеть — чтобы обновление приезжало само
-    e.respondWith(
-      fetch(e.request)
+  /* Обрабатываем только GET своего origin: POST, запросы к другим
+     доменам и расширения браузера пропускаем напрямую в сеть. */
+  if (req.method !== 'GET') return;
+  if (new URL(req.url).origin !== self.location.origin) return;
+
+  /* Навигация (открытие страницы) — сначала сеть, чтобы пользователь
+     сразу получал свежую версию; кэш подстрахует в офлайне. */
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
         .then(res => {
           const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
+          caches.open(CACHE).then(c => c.put('./index.html', copy));
           return res;
         })
-        .catch(() => caches.match(e.request).then(hit => hit || caches.match('index.html')))
+        .catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
     );
-  } else {
-    // остальное — из кэша
-    e.respondWith(
-      caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
-        return res;
-      }))
-    );
+    return;
   }
+
+  /* Остальная статика — сначала кэш, сеть как запасной вариант.
+     Успешный ответ дописываем в кэш, чтобы он был доступен офлайн. */
+  event.respondWith(
+    caches.match(req).then(cached => {
+      if (cached) return cached;
+      return fetch(req).then(res => {
+        if (res && res.status === 200 && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+        }
+        return res;
+      });
+    })
+  );
+});
+
+/* ---------- немедленное обновление по команде со страницы ---------- */
+self.addEventListener('message', event => {
+  if (event.data === 'skipWaiting') self.skipWaiting();
 });
