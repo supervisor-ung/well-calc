@@ -1,4 +1,4 @@
-const CACHE = 'well-calc-v30';
+const CACHE = 'well-calc-v31';
 const FILES = [
   './',
   './index.html',
