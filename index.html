@@ -360,7 +360,7 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
   </svg>
   <div>
     <h1>Памятка бурового супервайзера</h1>
-    <div class="sub">Объёмы · цементаж · буровой раствор · аварийность · v3.1</div>
+    <div class="sub">Объёмы · цементаж · буровой раствор · аварийность · v3.2</div>
   </div>
   <div class="spacer"></div>
   <div class="hbtns">
@@ -1231,55 +1231,73 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
           <button class="chip" data-v="dp">Бурильная колонна</button>
         </div>
       </div>
-      <p class="hint" style="margin:0 0 12px">Объёмы считаются по стволу, давления — по вертикали.
-      Объём участка: q = (D² − d²) / 1273, диаметры в мм.</p>
+      <p class="hint" style="margin:0 0 12px">Объёмы считаются по стволу, давления — по вертикали: P = ρ · 0,0981 · H, кгс/см².
+      Объём участка: q = (D² − d²) / 1273, диаметры в мм. «Взять из расчёта» переносит всё, кроме глубины колонны при прихвате,
+      её TVD и верха ванны — их вписывают по факту.</p>
 
       <p class="hint" style="margin:0 0 6px;color:var(--yellow)">Конструкция скважины</p>
       <div class="grid4">
         <label class="f"><span>ОК: Ø наружный, мм</span><input id="vn_okD" inputmode="decimal" oninput="calcVanna()"></label>
         <label class="f"><span>ОК: стенка, мм</span><input id="vn_okT" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span id="vnL_hvD">Хвостовик: Ø наружный, мм</span><input id="vn_hvD" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span id="vnL_hvT">Хвостовик: стенка, мм</span><input id="vn_hvT" inputmode="decimal" oninput="calcVanna()"></label>
         <label class="f"><span>Открытый ствол: Ø долота, мм</span><input id="vn_hole" inputmode="decimal" oninput="calcVanna()"></label>
         <label class="f"><span>Коэффициент кавернозности</span><input id="vn_kav" value="1.25" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>СБТ: Ø наруж. / стенка, мм</span>
-          <div style="display:flex;gap:6px"><input id="vn_sbtD" inputmode="decimal" oninput="calcVanna()" placeholder="88,9">
-          <input id="vn_sbtT" inputmode="decimal" oninput="calcVanna()" placeholder="8"></div></label>
-        <label class="f"><span>ТБТ: Ø наруж. / стенка, мм</span>
-          <div style="display:flex;gap:6px"><input id="vn_tbtD" inputmode="decimal" oninput="calcVanna()" placeholder="88,9">
-          <input id="vn_tbtT" inputmode="decimal" oninput="calcVanna()" placeholder="15,85"></div></label>
-      </div>
-
-      <p class="hint" style="margin:8px 0 6px;color:var(--yellow)">Глубины по стволу и вертикали</p>
-      <div class="grid4">
         <label class="f"><span>Низ окна / башмак ОК, м</span><input id="vn_okno" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span id="vnL_hvTop">Верх хвостовика, м</span><input id="vn_hvTop" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>Прихват (по стволу), м</span><input id="vn_stuck" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>Забой, м</span><input id="vn_zab" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>Длина СБТ, м</span><input id="vn_sbtL" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>Длина ТБТ, м</span><input id="vn_tbtL" inputmode="decimal" oninput="calcVanna()"></label>
         <label class="f"><span>TVD низа окна, м</span><input id="vn_tvdOkno" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>TVD прихвата, м</span><input id="vn_tvdStuck" inputmode="decimal" oninput="calcVanna()"></label>
       </div>
 
-      <p class="hint" style="margin:8px 0 6px;color:var(--yellow)">Жидкости и давления</p>
+      <div id="vnLinerBox">
+        <p class="hint" style="margin:8px 0 6px;color:var(--yellow)">Хвостовик</p>
+        <div class="grid4">
+          <label class="f"><span>Хвостовик: Ø наружный, мм</span><input id="vn_hvD" inputmode="decimal" oninput="calcVanna()"></label>
+          <label class="f"><span>Хвостовик: стенка, мм</span><input id="vn_hvT" inputmode="decimal" oninput="calcVanna()"></label>
+          <label class="f"><span>Верх хвостовика (подвеска), м</span><input id="vn_hvTop" inputmode="decimal" oninput="calcVanna()"></label>
+        </div>
+      </div>
+
+      <p class="hint" style="margin:8px 0 6px;color:var(--yellow)" id="vnStrTitle">Транспортная колонна</p>
+      <div class="tscroll">
+        <table class="cards" id="tblVnStr">
+          <thead><tr><th style="min-width:150px">Секция (сверху вниз)</th><th>Ø наруж., мм</th><th>Стенка, мм</th>
+            <th>Длина, м</th><th>Dвн, мм</th><th>Интервал по стволу, м</th><th class="act"></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div style="margin:6px 0 4px"><button class="btn sm" onclick="vnAddStr()">+ Секция</button></div>
+      <p class="hint" id="vnStrHint" style="margin:4px 0 0"></p>
+
+      <p class="hint" style="margin:12px 0 6px;color:var(--yellow)">Положение при прихвате</p>
+      <div class="grid4">
+        <label class="f"><span id="vnL_bot">Низ колонны при прихвате, м</span><input id="vn_bot" inputmode="decimal" oninput="calcVanna()"></label>
+        <label class="f"><span id="vnL_tvdBot">TVD низа колонны, м</span><input id="vn_tvdBot" inputmode="decimal" oninput="calcVanna()"></label>
+        <label class="f"><span>Верх ванны по стволу, м</span><input id="vn_top" inputmode="decimal" placeholder="пусто = низ окна" oninput="calcVanna()"></label>
+      </div>
+
+      <p class="hint" style="margin:8px 0 6px;color:var(--yellow)">Инклинометрия — дополнительные точки (необязательно)</p>
+      <div class="tscroll">
+        <table class="cards" id="tblVnInc">
+          <thead><tr><th>Глубина по стволу, м</th><th>TVD, м</th><th class="act"></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div style="margin:6px 0 4px"><button class="btn sm" onclick="vnAddInc()">+ Точка</button></div>
+      <p class="hint" style="margin:4px 0 0">Без дополнительных точек вертикаль между окном и низом колонны считается по прямой.
+      В пологом и горизонтальном участке это завышает снижение — добавьте 2–4 точки из инклинометрии в интервале ванны.</p>
+
+      <p class="hint" style="margin:12px 0 6px;color:var(--yellow)">Жидкости и давления</p>
       <div class="grid4">
         <label class="f"><span>Плотность раствора, г/см³</span><input id="vn_ro" inputmode="decimal" oninput="calcVanna()"></label>
         <label class="f"><span>Плотность нефти, г/см³</span><input id="vn_roN" value="0.85" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>Плотность полимерки, г/см³</span><input id="vn_roP" value="1.05" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>Пластовое давление, атм</span><input id="vn_ppl" inputmode="decimal" oninput="calcVanna()"></label>
+        <label class="f"><span>Пластовое давление, кгс/см²</span><input id="vn_ppl" inputmode="decimal" oninput="calcVanna()"></label>
         <label class="f"><span>Запас нефти в трубах, м³</span><input id="vn_zap" value="" placeholder="вписать" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>Желаемый запас по давлению, атм</span><input id="vn_rez" value="" placeholder="вписать" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>ЭГР по опрессовке, г/см³</span><input id="vn_egr" value="" placeholder="из акта опрессовки" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>TVD башмака ОК, м</span><input id="vn_tvdBash" inputmode="decimal" oninput="calcVanna()"></label>
       </div>
+      <div id="vnInWarn"></div>
     </div>
   </div>
 
   <div class="panel">
     <h2>Объёмы участков, л/м</h2>
     <div class="body"><div class="tscroll"><table class="cards" id="tblVn">
-      <thead><tr><th style="min-width:190px">Зона</th><th>Интервал по стволу, м</th><th>Расчёт</th><th>Объём, л/м</th></tr></thead>
+      <thead><tr><th style="min-width:190px">Зона</th><th>Интервал по стволу, м</th><th>Расчёт</th><th>Объём, л/м</th><th>Объём, м³</th></tr></thead>
       <tbody></tbody></table></div>
       <p class="hint">Эту таблицу удобно держать под рукой всю операцию: умножил объём на погонный метр на длину — получил литры.</p>
     </div>
@@ -1315,7 +1333,7 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
       <div id="vnFWarn"></div>
       <div class="tscroll"><table class="cards" id="tblVnF">
         <thead><tr><th style="min-width:150px">Жидкость</th><th>Объём, м³</th><th>Интервал по стволу, м</th>
-          <th>Вертикаль, м</th><th>Δρ</th><th>Снижение, атм</th></tr></thead>
+          <th>Вертикаль, м</th><th>Δρ</th><th>Снижение, кгс/см²</th></tr></thead>
         <tbody></tbody></table></div>
       <div class="res" id="vnResF" style="margin-top:12px"></div>
     </div>
@@ -1327,23 +1345,23 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
       <div class="big" id="vnBig2"></div>
       <div id="vnWarn"></div>
       <div class="tscroll"><table class="cards" id="tblVnP">
-        <thead><tr><th style="min-width:170px">Этап</th><th>Гидростатика, атм</th><th>Пласт, атм</th>
-          <th>Баланс, атм</th><th>Давление на устье, атм</th></tr></thead>
+        <thead><tr><th style="min-width:170px">Этап</th><th>Гидростатика, кгс/см²</th><th>Пласт, кгс/см²</th>
+          <th>Баланс, кгс/см²</th><th>Давление на устье, кгс/см²</th></tr></thead>
         <tbody></tbody></table></div>
       <div class="res" id="vnRes3" style="margin-top:12px"></div>
+      <p class="hint">Давления — в кгс/см² (техническая атмосфера). Если в программе работ давления посчитаны
+      в физических атмосферах (ρ · 9,81 · H / 101325), там цифры на 1,3 % меньше — при сверке учитывайте это.</p>
     </div>
   </div>
 
   <div class="panel">
     <h2>Полимерная вода на равновесие</h2>
     <div class="body">
-      <p class="hint" style="margin:0 0 10px">Обратная задача: сколько полимерки можно поставить над нефтью,
-      не уйдя ниже пластового давления. Расчёт послойный — вклад каждой жидкости считается отдельно.</p>
+      <p class="hint" style="margin:0 0 10px">Обратная задача: сколько полимерки можно поставить над расчётной ванной,
+      не уйдя ниже пластового давления. Вертикаль считается по той же инклинометрии.</p>
       <div class="grid4">
-        <label class="f"><span>Верхняя точка для наклона: TVD, м</span><input id="vn_tvdUp" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span>Она же по стволу, м</span><input id="vn_mdUp" inputmode="decimal" oninput="calcVanna()"></label>
-        <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
-        <label class="f"><span> </span><input readonly style="visibility:hidden"></label>
+        <label class="f"><span>Плотность полимерки, г/см³</span><input id="vn_roP" value="1.05" inputmode="decimal" oninput="calcVanna()"></label>
+        <label class="f"><span>Желаемый запас по давлению, кгс/см²</span><input id="vn_rez" value="3" inputmode="decimal" oninput="calcVanna()"></label>
       </div>
       <div class="big" id="vnBig3"></div>
       <div class="res" id="vnRes4"></div>
@@ -2541,53 +2559,117 @@ function rkCopy(){
 }
 
 /* ======== расчёт ванны ======== */
-const QK=1273;
+const QK=1273, GK=0.0981;
 const qq=(D,d)=>((D*D-(d||0)*(d||0))/QK);
 const VN={kind:'liner'};
-const VNW={liner:{Low:'Хвостовик',gen:'хвостовика',top:'Верх хвостовика',
-                  zone:'Затруб: ОК ↔ хвостовик',zone2:'Затруб: открытый ствол ↔ хвостовик',inside:'Внутри хвостовика'},
-           dp:{Low:'Бурильная колонна',gen:'бурильной колонны',top:'Верх нижней секции',
-               zone:'Затруб: ОК ↔ нижняя секция',zone2:'Затруб: открытый ствол ↔ нижняя секция',inside:'Внутри нижней секции'}};
+const vnEsc=s=>String(s==null?'':s).replace(/"/g,'&quot;');
 function initVanna(){
   const box=$('vnKind'); if(!box)return;
   box.querySelectorAll('.chip').forEach(b=>{
-    b.onclick=()=>{box.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
-      b.classList.add('on');VN.kind=b.dataset.v;vnLabels();calcVanna();};
+    b.onclick=()=>{vnSetKind(b.dataset.v);calcVanna();};
   });
+  if(!$('tblVnStr').querySelector('tbody tr')){vnAddStr('СБТ');vnAddStr('ТБТ');}
+  vnLabels();
+}
+function vnSetKind(k){
+  VN.kind=(k==='dp'?'dp':'liner');
+  const box=$('vnKind');
+  if(box)box.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.dataset.v===VN.kind));
   vnLabels();
 }
 function vnLabels(){
-  const w=VNW[VN.kind], set=(id,t)=>{const el=$(id);if(el)el.textContent=t;};
-  set('vnL_hvD',w.Low+': Ø наружный, мм');set('vnL_hvT',w.Low+': стенка, мм');set('vnL_hvTop',w.top+', м');
+  const L=VN.kind==='liner', set=(id,t)=>{const el=$(id);if(el)el.textContent=t;};
+  if($('vnLinerBox'))$('vnLinerBox').style.display=L?'':'none';
+  set('vnStrTitle',L?'Транспортная колонна — от устья до верха хвостовика':'Бурильная колонна — от устья до долота');
+  set('vnL_bot',L?'Башмак хвостовика при прихвате, м':'Низ колонны (долото) при прихвате, м');
+  set('vnL_tvdBot',L?'TVD башмака хвостовика, м':'TVD низа колонны, м');
+  set('vnStrHint',(L?'Секции транспортной колонны сверху вниз. Их сумма должна равняться глубине верха хвостовика.'
+      :'Секции сверху вниз, последней — КНБК. Сумма длин должна равняться глубине низа колонны при прихвате.')+
+    ' Длину верхней секции можно не заполнять — программа досчитает её сама. Так удобно при прихвате во время СПО: '+
+    'меняется только глубина низа колонны, остальные длины остаются.');
 }
-function vnClear(){
-  ['vn_okD','vn_okT','vn_hvD','vn_hvT','vn_hole','vn_sbtD','vn_sbtT','vn_tbtD','vn_tbtT',
-   'vn_okno','vn_hvTop','vn_stuck','vn_zab','vn_sbtL','vn_tbtL','vn_tvdOkno','vn_tvdStuck',
-   'vn_ro','vn_ppl','vn_tvdBash','vn_tvdUp','vn_mdUp'].forEach(id=>{if($(id))$(id).value='';});
-  $('vn_kav').value='1.25';$('vn_roN').value='0.85';$('vn_roP').value='1.05';
-  $('vn_zap').value='3';$('vn_rez').value='3';$('vn_egr').value='1.55';
+function vnAddStr(nm,d,t,L){
+  const tr=document.createElement('tr');
+  tr.innerHTML=
+    '<td data-l="Секция"><input class="nm" value="'+vnEsc(nm)+'" placeholder="СБТ / ТБТ / КНБК" oninput="calcVanna()"></td>'+
+    '<td data-l="Ø наруж., мм"><input class="d" value="'+vnEsc(d)+'" inputmode="decimal" oninput="calcVanna()"></td>'+
+    '<td data-l="Стенка, мм"><input class="t" value="'+vnEsc(t)+'" inputmode="decimal" oninput="calcVanna()"></td>'+
+    '<td data-l="Длина, м"><input class="L" value="'+vnEsc(L)+'" inputmode="decimal" placeholder="авто" oninput="calcVanna()"></td>'+
+    '<td data-l="Dвн, мм" class="calc din">—</td><td data-l="Интервал, м" class="dim iv">—</td>'+
+    '<td class="act"><button class="btn xs" onclick="vnMoveRow(this,-1)">↑</button>'+
+    '<button class="btn xs" onclick="vnMoveRow(this,1)">↓</button>'+
+    '<button class="btn xs danger" onclick="this.closest(\'tr\').remove();calcVanna()">✕</button></td>';
+  $('tblVnStr').querySelector('tbody').appendChild(tr);calcVanna();
+}
+function vnAddInc(md,tv){
+  const tr=document.createElement('tr');
+  tr.innerHTML=
+    '<td data-l="По стволу, м"><input class="md" value="'+vnEsc(md)+'" inputmode="decimal" oninput="calcVanna()"></td>'+
+    '<td data-l="TVD, м"><input class="tvd" value="'+vnEsc(tv)+'" inputmode="decimal" oninput="calcVanna()"></td>'+
+    '<td class="act"><button class="btn xs danger" onclick="this.closest(\'tr\').remove();calcVanna()">✕</button></td>';
+  $('tblVnInc').querySelector('tbody').appendChild(tr);calcVanna();
+}
+function vnMoveRow(b,dir){
+  const tr=b.closest('tr'),tb=tr.parentNode;
+  if(dir<0&&tr.previousElementSibling)tb.insertBefore(tr,tr.previousElementSibling);
+  if(dir>0&&tr.nextElementSibling)tb.insertBefore(tr.nextElementSibling,tr);
   calcVanna();
 }
+function vnClear(){
+  ['vn_okD','vn_okT','vn_hole','vn_okno','vn_tvdOkno','vn_hvD','vn_hvT','vn_hvTop',
+   'vn_bot','vn_tvdBot','vn_top','vn_ro','vn_ppl','vn_zap'].forEach(id=>{if($(id))$(id).value='';});
+  $('vn_kav').value='1.25';$('vn_roN').value='0.85';$('vn_roP').value='1.05';$('vn_rez').value='3';
+  $('tblVnStr').querySelector('tbody').innerHTML='';$('tblVnInc').querySelector('tbody').innerHTML='';
+  vnAddStr('СБТ');vnAddStr('ТБТ');
+  calcVanna();
+}
+/* перенос из вкладки «Промывка и продавка» — всё, кроме глубины при прихвате, её TVD и верха ванны */
 function vnPull(){
-  const g=id=>($(id)&&$(id).value||'').trim(), set=(id,v)=>{if(v&&$(id)&&!$(id).value)$(id).value=v;};
-  set('vn_zab',g('zaboy'));set('vn_okno',g('bashmak'));set('vn_kav',g('kaver'));set('vn_tvdStuck',g('tvd'));
+  const g=id=>($(id)&&$(id).value||'').trim(), put=(id,v)=>{v=(v==null?'':String(v)).trim();if(v!==''&&$(id))$(id).value=v;};
+  put('vn_okno',g('bashmak'));
   const c=$('tblCas').querySelectorAll('tbody tr');
-  if(c.length){const l=c[c.length-1];set('vn_okD',l.querySelector('.d').value);set('vn_okT',l.querySelector('.t').value);}
+  if(c.length){const l=c[c.length-1];put('vn_okD',l.querySelector('.d').value);put('vn_okT',l.querySelector('.t').value);}
   const o=$('tblOpen').querySelector('tbody tr');
-  if(o)set('vn_hole',o.querySelector('.d').value);
-  const t=$('tblTool').querySelectorAll('tbody tr');
+  if(o)put('vn_hole',o.querySelector('.d').value);
+  put('vn_kav',(o&&o.querySelector('.k')&&o.querySelector('.k').value.trim())||g('kaver'));
+  put('vn_ro',g('h_ro')||g('m_r1'));
+  put('vn_ppl',g('h_ppl')||g('m_ppl'));
+  const t=[...$('tblTool').querySelectorAll('tbody tr')].map(tr=>({
+      nm:(tr.querySelector('.nm').value||'').trim(),d:tr.querySelector('.d').value,t:tr.querySelector('.t').value,
+      L:num(tr.querySelector('.lc').value)+num(tr.querySelector('.lo').value)})).filter(r=>r.nm||num(r.d)>0);
   if(t.length){
-    let big=null,bl=0,tbt=null;
-    t.forEach(tr=>{const L=num(tr.querySelector('.lc').value)+num(tr.querySelector('.lo').value);
-      const nm=(tr.querySelector('.nm').value||'').toUpperCase();
-      if(L>bl){bl=L;big=tr;} if(nm.indexOf('ТБТ')>=0)tbt=tr;});
-    if(big){set('vn_sbtD',big.querySelector('.d').value);set('vn_sbtT',big.querySelector('.t').value);set('vn_sbtL',fmt(bl,1));}
-    if(tbt){set('vn_tbtD',tbt.querySelector('.d').value);set('vn_tbtT',tbt.querySelector('.t').value);
-      set('vn_tbtL',fmt(num(tbt.querySelector('.lc').value)+num(tbt.querySelector('.lo').value),1));}
-    if(VN.kind==='dp'){const last=t[t.length-1];
-      set('vn_hvD',last.querySelector('.d').value);set('vn_hvT',last.querySelector('.t').value);}
+    let list=t;
+    if(VN.kind==='liner'){
+      const hv=t.filter(r=>/хвост/i.test(r.nm));
+      if(hv.length){put('vn_hvD',hv[0].d);put('vn_hvT',hv[0].t);}
+      list=t.filter(r=>!/хвост/i.test(r.nm));
+    }
+    if(list.length){
+      $('tblVnStr').querySelector('tbody').innerHTML='';
+      /* длина верхней секции — авто, чтобы колонна подстроилась под фактическую глубину при прихвате */
+      list.forEach((r,i)=>vnAddStr(r.nm,r.d,r.t,i===0?'':(r.L>0?fmt(r.L,1):'')));
+    }
   }
-  if(!$('vn_stuck').value&&$('vn_zab').value)$('vn_stuck').value=$('vn_zab').value;
+  const zb=num(g('zaboy')),tv=num(g('tvd'));
+  if(zb>0&&tv>0){
+    const ex=[...$('tblVnInc').querySelectorAll('tbody tr')].some(tr=>Math.abs(num(tr.querySelector('.md').value)-zb)<0.5);
+    if(!ex)vnAddInc(fmt(zb,1),fmt(tv,1));
+  }
+  calcVanna();
+}
+function vnCollect(){
+  return{kind:VN.kind,
+    str:[...$('tblVnStr').querySelectorAll('tbody tr')].map(tr=>({nm:tr.querySelector('.nm').value,d:tr.querySelector('.d').value,
+      t:tr.querySelector('.t').value,L:tr.querySelector('.L').value})),
+    inc:[...$('tblVnInc').querySelectorAll('tbody tr')].map(tr=>({md:tr.querySelector('.md').value,tvd:tr.querySelector('.tvd').value})),
+    f:VNF.map(r=>({n:r.n,v:r.v,ro:r.ro}))};
+}
+function vnRestore(d){
+  if(!d)return;
+  vnSetKind(d.kind);
+  if(Array.isArray(d.str)){$('tblVnStr').querySelector('tbody').innerHTML='';d.str.forEach(r=>vnAddStr(r.nm,r.d,r.t,r.L));}
+  if(Array.isArray(d.inc)){$('tblVnInc').querySelector('tbody').innerHTML='';d.inc.forEach(r=>vnAddInc(r.md,r.tvd));}
+  if(Array.isArray(d.f)){VNF=d.f.map(r=>({n:r.n||'',v:r.v||'',ro:r.ro||''}));vnDrawF();}
   calcVanna();
 }
 let VNF=[];
@@ -2596,11 +2678,11 @@ function vnDrawF(){
   if(!VNF.length){
     tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted)">жидкости не заданы — расчёт идёт по расчётной ванне</td></tr>';return;}
   tb.innerHTML=VNF.map((r,i)=>{
-    const pos=(i===0?'выше всех':(i===VNF.length-1?'внизу, у зоны прихвата':'посередине'));
+    const pos=(VNF.length===1?'у зоны прихвата':(i===0?'выше всех':(i===VNF.length-1?'внизу, у зоны прихвата':'посередине')));
     return '<tr>'+
-      '<td data-l="Жидкость"><input value="'+(r.n||'').replace(/"/g,'&quot;')+'" placeholder="нефть / кислота / полимерка" oninput="vnEditF('+i+',&quot;n&quot;,this.value)"></td>'+
-      '<td data-l="Объём, м³"><input value="'+(r.v||'')+'" inputmode="decimal" oninput="vnEditF('+i+',&quot;v&quot;,this.value)"></td>'+
-      '<td data-l="Плотность"><input value="'+(r.ro||'')+'" inputmode="decimal" oninput="vnEditF('+i+',&quot;ro&quot;,this.value)"></td>'+
+      '<td data-l="Жидкость"><input value="'+vnEsc(r.n)+'" placeholder="нефть / кислота / полимерка" oninput="vnEditF('+i+',&quot;n&quot;,this.value)"></td>'+
+      '<td data-l="Объём, м³"><input value="'+vnEsc(r.v)+'" inputmode="decimal" oninput="vnEditF('+i+',&quot;v&quot;,this.value)"></td>'+
+      '<td data-l="Плотность"><input value="'+vnEsc(r.ro)+'" inputmode="decimal" oninput="vnEditF('+i+',&quot;ro&quot;,this.value)"></td>'+
       '<td data-l="Положение" class="dim" style="font-size:11.5px">'+(i+1)+' закачка · '+pos+'</td>'+
       '<td class="act"><button class="btn xs" onclick="vnMoveF('+i+',-1)">↑</button>'+
       '<button class="btn xs" onclick="vnMoveF('+i+',1)">↓</button>'+
@@ -2617,36 +2699,108 @@ function vnUseCalc(){
   VNF=[{n:'Нефть',v:fmt(V,2),ro:($('vn_roN').value||'0.85')}];vnDrawF();calcVanna();
 }
 function calcVanna(){
+  if(!$('tblVnStr'))return;
   const g=id=>num($(id)&&$(id).value), f=(a,b)=>fmt(a,b===undefined?2:b);
-  const okD=g('vn_okD'),okT=g('vn_okT'),hvD=g('vn_hvD'),hvT=g('vn_hvT'),hole=g('vn_hole'),kav=g('vn_kav')||1,
-        sbtD=g('vn_sbtD'),sbtT=g('vn_sbtT'),tbtD=g('vn_tbtD'),tbtT=g('vn_tbtT'),
-        okno=g('vn_okno'),hvTop=g('vn_hvTop'),stuck=g('vn_stuck'),zab=g('vn_zab'),
-        sbtL=g('vn_sbtL'),tbtL=g('vn_tbtL'),tvdO=g('vn_tvdOkno'),tvdS=g('vn_tvdStuck'),
-        ro=g('vn_ro'),roN=g('vn_roN'),roP=g('vn_roP'),ppl=g('vn_ppl'),
-        zap=g('vn_zap'),rez=g('vn_rez'),egr=g('vn_egr'),tvdB=g('vn_tvdBash'),
-        tvdUp=g('vn_tvdUp'),mdUp=g('vn_mdUp');
-  const W=VNW[VN.kind];
-  const okVn=okD-2*okT,hvVn=hvD-2*hvT,sbtVn=sbtD-2*sbtT,tbtVn=tbtD-2*tbtT;
-  const Dk=hole*Math.sqrt(kav);
-  const q1=qq(okVn,sbtD),q2=qq(okVn,hvD),q3=(hole*hole*kav-hvD*hvD)/QK,q4=(hole*hole*kav)/QK,
-        qs=qq(sbtVn),qt=qq(tbtVn),qh=qq(hvVn);
+  const isL=VN.kind==='liner';
+  const okD=g('vn_okD'),okT=g('vn_okT'),hole=g('vn_hole'),kav=g('vn_kav')||1,
+        okno=g('vn_okno'),tvdO=g('vn_tvdOkno'),
+        hvD=g('vn_hvD'),hvT=g('vn_hvT'),hvTop=g('vn_hvTop'),
+        bot=g('vn_bot'),tvdB=g('vn_tvdBot'),topIn=g('vn_top'),
+        ro=g('vn_ro'),roN=g('vn_roN'),ppl=g('vn_ppl'),zap=g('vn_zap'),
+        roP=g('vn_roP'),rez=g('vn_rez');
+  const okVn=okD-2*okT, hvVn=hvD-2*hvT, Dk=hole*Math.sqrt(kav);
   const kv=(t,v,ff)=>'<div class="k"'+(ff?' data-f="'+ff+'"':'')+'>'+t+'</div><div class="v"'+(ff?' data-f="'+ff+'"':'')+'>'+v+'</div>';
-  const row=(z,iv,calc,v)=>'<tr><td data-l="Зона">'+z+'</td><td data-l="Интервал" class="dim">'+iv+'</td>'+
-    '<td data-l="Расчёт" class="dim" style="font-size:11.5px">'+calc+'</td><td data-l="Объём, л/м" class="calc">'+f(v)+'</td></tr>';
-  $('tblVn').querySelector('tbody').innerHTML=
-    row('Затруб: ОК ↔ СБТ','0 – '+f(hvTop,0),'('+f(okVn,1)+'² − '+f(sbtD,1)+'²) / 1273',q1)+
-    row(W.zone,f(hvTop,0)+' – '+f(okno,0),'('+f(okVn,1)+'² − '+f(hvD,1)+'²) / 1273',q2)+
-    row(W.zone2,f(okno,0)+' – '+f(stuck,0),'('+f(hole,1)+'² · '+f(kav)+' − '+f(hvD,1)+'²) / 1273',q3)+
-    row('Затруб: открытый ствол пустой',f(stuck,0)+' – '+f(zab,0),f(hole,1)+'² · '+f(kav)+' / 1273',q4)+
-    row('Внутри СБТ','0 – '+f(sbtL,0),f(sbtVn,1)+'² / 1273',qs)+
-    row('Внутри ТБТ',f(sbtL,0)+' – '+f(hvTop,0),f(tbtVn,1)+'² / 1273',qt)+
-    row(W.inside,f(hvTop,0)+' – '+f(stuck,0),f(hvVn,1)+'² / 1273',qh);
+  const iw=[];
 
-  const Lv=Math.max(0,stuck-okno), Vzat=q3*Lv/1000, Vall=Vzat+zap;
-  const Vin=(qs*sbtL+qt*tbtL+qh*Math.max(0,stuck-hvTop))/1000, Vpr=Vin-zap;
+  /* ---- колонна: секции сверху вниз ---- */
+  const target=isL?hvTop:bot;
+  const raw=[...$('tblVnStr').querySelectorAll('tbody tr')].map(tr=>({tr:tr,
+      nm:(tr.querySelector('.nm').value||'').trim()||'секция',
+      D:num(tr.querySelector('.d').value),t:num(tr.querySelector('.t').value),
+      Ls:(tr.querySelector('.L').value||'').trim(),L:num(tr.querySelector('.L').value)}));
+  const empty=raw.filter(r=>r.Ls==='');
+  const given=raw.filter(r=>r.Ls!=='').reduce((a,r)=>a+r.L,0);
+  if(empty.length===1&&target>0){empty[0].L=Math.max(0,target-given);empty[0].auto=true;
+    if(target-given<0)iw.push('<div class="warn err">Длины нижних секций ('+f(given,1)+' м) больше, чем '+
+      (isL?'глубина верха хвостовика':'глубина низа колонны')+' ('+f(target,1)+' м).</div>');}
+  else if(empty.filter(r=>r.D>0).length>1)iw.push('<div class="warn">Длина не заполнена у нескольких секций — оставьте пустой только одну (обычно верхнюю СБТ), её программа досчитает сама.</div>');
+  const sumL=raw.reduce((a,r)=>a+r.L,0);
+  if(target>0&&raw.length&&empty.length!==1&&Math.abs(sumL-target)>0.5)
+    iw.push('<div class="warn err">Сумма длин колонны '+f(sumL,1)+' м не равна '+(isL?'глубине верха хвостовика':'глубине низа колонны')+
+      ' '+f(target,1)+' м. Исправьте длины или оставьте длину верхней секции пустой.</div>');
+  if(!(target>0))iw.push('<div class="warn">'+(isL?'Укажите верх хвостовика и глубину башмака при прихвате.':'Укажите глубину низа колонны при прихвате.')+'</div>');
+  let pos=0; const segs=[];
+  raw.forEach(r=>{
+    const a=pos, b=target>0?Math.min(pos+r.L,target):pos+r.L; pos+=r.L;
+    const din=r.D-2*r.t;
+    r.tr.querySelector('.din').textContent=r.D>0?f(din,1):'—';
+    r.tr.querySelector('.iv').textContent=r.L>0?(f(a,0)+' – '+f(a+r.L,0)+(r.auto?' (авто)':'')):'—';
+    if(b>a&&r.D>0)segs.push({nm:r.nm,D:r.D,d:din,a:a,b:b});
+  });
+  if(isL){
+    if(hvTop>0&&bot>0&&hvTop>=bot)iw.push('<div class="warn err">Верх хвостовика должен быть выше башмака хвостовика.</div>');
+    if(hvD>0&&bot>hvTop)segs.push({nm:'хвостовик',D:hvD,d:hvVn,a:hvTop,b:bot});
+  }
+  const bottom=segs.length?segs[segs.length-1].b:0;
+
+  /* ---- затрубные участки по стволу ---- */
+  const ann=[];
+  segs.forEach(s=>{
+    const cut=(a,b,cased)=>{if(b<=a)return;
+      ann.push({a:a,b:b,cased:cased,nm:s.nm,D:s.D,q:cased?qq(okVn,s.D):(hole*hole*kav-s.D*s.D)/QK});};
+    if(okno>0){cut(s.a,Math.min(s.b,okno),true);cut(Math.max(s.a,okno),s.b,false);}
+    else cut(s.a,s.b,false);
+  });
+  const volBetween=(a,b)=>ann.reduce((s,z)=>s+Math.max(0,Math.min(b,z.b)-Math.max(a,z.a))*z.q,0)/1000;
+  const upFrom=(md,vol)=>{let left=vol*1000,p=md;
+    for(let i=ann.length-1;i>=0;i--){const z=ann[i];if(z.a>=p)continue;
+      const hi=Math.min(z.b,p),av=(hi-z.a)*z.q;
+      if(z.q>0&&left<=av)return{md:hi-left/z.q,over:0};
+      left-=Math.max(0,av);p=z.a;}
+    return{md:0,over:left/1000};};
+
+  /* ---- вертикаль по точкам инклинометрии ---- */
+  const pts=[[0,0]];
+  if(okno>0&&tvdO>0)pts.push([okno,tvdO]);
+  if(bot>0&&tvdB>0)pts.push([bot,tvdB]);
+  $('tblVnInc').querySelectorAll('tbody tr').forEach(tr=>{
+    const m=num(tr.querySelector('.md').value),v=num(tr.querySelector('.tvd').value);if(m>0&&v>0)pts.push([m,v]);});
+  pts.sort((x,y)=>x[0]-y[0]);
+  let badInc=false;
+  for(let i=1;i<pts.length;i++){if(pts[i][1]<pts[i-1][1]-0.5||pts[i][1]>pts[i][0]+0.5)badInc=true;}
+  if(badInc)iw.push('<div class="warn err">Точки инклинометрии противоречат друг другу: TVD не может быть больше глубины по стволу и не должна уменьшаться с глубиной.</div>');
+  const tvd=md=>{
+    if(pts.length<2)return md;
+    for(let i=1;i<pts.length;i++){if(md<=pts[i][0]){const p=pts[i-1],q=pts[i];
+      return q[0]>p[0]?p[1]+(q[1]-p[1])*(md-p[0])/(q[0]-p[0]):q[1];}}
+    const p=pts[pts.length-2],q=pts[pts.length-1];
+    return q[1]+(q[0]>p[0]?(q[1]-p[1])/(q[0]-p[0]):1)*(md-q[0]);};
+  if(bot>0&&!(tvdB>0))iw.push('<div class="warn">Не указана '+(isL?'TVD башмака хвостовика':'TVD низа колонны')+' — вертикаль берётся продлением последнего участка, давления приблизительные.</div>');
+  if(bot>0&&okno>0&&bot<=okno&&!(topIn>0))iw.push('<div class="warn">Низ колонны выше низа окна — укажите «Верх ванны» вручную.</div>');
+  $('vnInWarn').innerHTML=iw.join('');
+
+  /* ---- таблица удельных объёмов ---- */
+  const lbl=z=>'Затруб: '+(z.cased?'ОК':'открытый ствол')+' ↔ '+z.nm+' '+f(z.D,1);
+  let rowsH='';
+  const row=(z,iv,calc,v,V)=>'<tr><td data-l="Зона">'+z+'</td><td data-l="Интервал" class="dim">'+iv+'</td>'+
+    '<td data-l="Расчёт" class="dim" style="font-size:11.5px">'+calc+'</td><td data-l="Объём, л/м" class="calc">'+f(v)+'</td>'+
+    '<td data-l="Объём, м³" class="calc">'+f(V)+'</td></tr>';
+  ann.forEach(z=>{rowsH+=row(lbl(z),f(z.a,0)+' – '+f(z.b,0),
+    z.cased?'('+f(okVn,1)+'² − '+f(z.D,1)+'²) / 1273':'('+f(hole,1)+'² · '+f(kav)+' − '+f(z.D,1)+'²) / 1273',z.q,z.q*(z.b-z.a)/1000);});
+  segs.forEach(s=>{const q=qq(s.d);rowsH+=row('Внутри: '+s.nm+' '+f(s.D,1)+'×'+f((s.D-s.d)/2,2),f(s.a,0)+' – '+f(s.b,0),
+    f(s.d,1)+'² / 1273',q,q*(s.b-s.a)/1000);});
+  $('tblVn').querySelector('tbody').innerHTML=rowsH||
+    '<tr><td colspan="5" style="text-align:center;color:var(--muted)">заполните конструкцию и колонну</td></tr>';
+
+  /* ---- объёмы ванны и продавки ---- */
+  const topV=topIn>0?topIn:(okno>0?okno:0);
+  const Lv=Math.max(0,bottom-topV);
+  const Vzat=Lv>0?volBetween(topV,bottom):0, Vall=Vzat+zap;
+  const Vin=segs.reduce((a,s)=>a+qq(s.d)*(s.b-s.a),0)/1000, Vpr=Vin-zap;
+  const qAvg=Lv>0?Vzat*1000/Lv:0;
   window.__VN={Vzat:Vzat};
   $('vnBig1').innerHTML=
-    '<div data-f="'+F('Объём ванны в затрубе','объём на метр · длина<br>'+f(q3)+' л/м · '+f(Lv,0)+' м = '+f(Vzat)+' м³')+
+    '<div data-f="'+F('Объём ванны в затрубе','от низа колонны до верха ванны<br>'+f(bottom,0)+' → '+f(topV,0)+' м, '+f(Lv,0)+' м · '+f(qAvg)+' л/м = '+f(Vzat)+' м³')+
       '"><div class="l">Ванна в затрубе (расчёт)</div><div class="n">'+f(Vzat)+'<small> м³</small></div></div>'+
     '<div data-f="'+F('Всего готовить','ванна + запас в трубах<br>'+f(Vzat)+' + '+f(zap)+' = '+f(Vall)+' м³')+
       '"><div class="l">Всего готовить</div><div class="n">'+f(Vall)+'<small> м³</small></div></div>'+
@@ -2655,153 +2809,134 @@ function calcVanna(){
     '<div><div class="l">Перекрываемая длина</div><div class="n">'+f(Lv,0)+'<small> м</small></div></div>';
   $('vnRes1').innerHTML='<div class="hd">Диаметры</div>'+
     kv('Dвн обсадной колонны, мм',f(okVn,1),F('Внутренний диаметр',f(okD,1)+' − 2 · '+f(okT,2)+' = '+f(okVn,1)+' мм'))+
-    kv('Dвн '+W.gen+', мм',f(hvVn,1),F('Внутренний диаметр',f(hvD,1)+' − 2 · '+f(hvT,2)+' = '+f(hvVn,1)+' мм'))+
-    kv('Dвн СБТ, мм',f(sbtVn,1),'')+kv('Dвн ТБТ, мм',f(tbtVn,1),'')+
+    segs.map(s=>kv('Dвн: '+s.nm+', мм',f(s.d,1),'')).join('')+
     kv('Эквивалентный Ø ствола, мм',f(Dk,1),F('С кавернозностью','Ø долота · √k = '+f(hole,1)+' · √'+f(kav)+' = '+f(Dk,1)+' мм'));
   $('vnRes2').innerHTML='<div class="hd">Объёмы</div>'+
-    kv('Внутренний объём колонны, м³',f(Vin),F('Внутренний объём','СБТ '+f(qs)+'·'+f(sbtL,0)+' + ТБТ '+f(qt)+'·'+f(tbtL,0)+
-      ' + '+W.gen+' '+f(qh)+'·'+f(Math.max(0,stuck-hvTop),0)+' = '+f(Vin)+' м³'))+
+    kv('Внутренний объём колонны, м³',f(Vin),F('Внутренний объём',segs.map(s=>s.nm+' '+f(qq(s.d))+' · '+f(s.b-s.a,0)).join(' + ')+' = '+f(Vin)+' м³'))+
     kv('Ванна в затрубе, м³',f(Vzat),'')+kv('Запас в трубах, м³',f(zap),'')+
     kv('Всего готовить, м³',f(Vall),'')+kv('Продавка, м³',f(Vpr),'');
 
-  /* геометрия и базовые давления */
-  const dTVD=Math.max(0,tvdS-tvdO), cosA=Lv>0?dTVD/Lv:NaN;
-  const ang=isFinite(cosA)?Math.acos(Math.max(-1,Math.min(1,cosA)))*180/Math.PI:NaN;
-  const cosUp=(mdUp>0&&okno>mdUp)?(tvdO-tvdUp)/(okno-mdUp):(isFinite(cosA)?cosA:1);
-  const P0=ro*tvdS/10, rep0=P0-ppl, maasp=(egr-ro)*tvdB/10;
-
-  /* послойная раскладка снизу вверх по фактическим объёмам */
+  /* ---- послойная раскладка столба снизу вверх ---- */
+  const col=(listBottomFirst,b)=>{let p=b,out=[],dP=0,H=0,over=0;
+    listBottomFirst.forEach(L=>{const u=upFrom(p,L.v),h=Math.max(0,tvd(p)-tvd(u.md)),d=(ro-L.ro)*GK*h;
+      out.push({name:L.name,v:L.v,ro:L.ro,bot:p,top:u.md,H:h,dP:d});dP+=d;H+=h;over+=u.over;p=u.md;});
+    return{lay:out,dP:dP,H:H,over:over,top:p};};
+  const P0=ro*GK*tvd(bottom), rep0=P0-ppl;
   const seq=VNF.map(r=>({name:(r.n||'жидкость'),v:num(r.v),ro:num(r.ro)})).filter(x=>x.v>0&&x.ro>0);
   const anyF=seq.length>0;
-  const zones=[{q:q3,from:stuck,to:okno,cos:isFinite(cosA)?cosA:1},
-               {q:q2,from:okno,to:hvTop,cos:cosUp},
-               {q:q1,from:hvTop,to:0,cos:cosUp}];
-  function layers(list){
-    let pos=stuck, zi=0, out=[];
-    list.forEach(L=>{
-      let left=L.v*1000, top=pos, H=0;
-      while(left>0.001&&zi<zones.length){
-        const z=zones[zi], avail=Math.max(0,pos-Math.max(z.to,0))*z.q;
-        if(avail<=0){zi++;continue;}
-        const take=Math.min(left,avail), len=z.q>0?take/z.q:0;
-        pos-=len; H+=len*Math.min(1,Math.max(0,z.cos)); left-=take;
-        if(left>0.001)zi++;
-      }
-      out.push({name:L.name,v:L.v,ro:L.ro,top:top,bot:pos,H:H,dP:(ro-L.ro)*H/10});
-    });
-    return out;
-  }
-  let lay=[], dPtot=0;
-  if(anyF){
-    lay=layers(seq.slice().reverse());     /* последняя закачанная встаёт внизу */
-    lay.forEach(x=>dPtot+=x.dP);
-    lay.reverse();                          /* показываем в порядке закачки */
-  }
-  const dP1c=(ro-roN)*dTVD/10;                 /* снижение по расчётной ванне */
-  const dP1=anyF?dPtot:dP1c;                    /* фактическое снижение */
-  const P1=P0-dP1;
+  const cBath=col([{name:'Нефть',v:Vzat,ro:roN}],bottom), dP1c=cBath.dP;
+  const base=anyF?seq:[{name:'Нефть',v:Vzat,ro:roN}];
+  const st1=col(base.slice().reverse(),bottom);
+  const dP1=st1.dP, P1=P0-dP1;
+  const lay=st1.lay.slice().reverse();
 
   $('tblVnF').querySelector('tbody').innerHTML= anyF
     ? lay.map(x=>'<tr><td data-l="Жидкость">'+x.name+'</td><td data-l="Объём, м³" class="calc">'+f(x.v)+'</td>'+
-        '<td data-l="Интервал" class="dim">'+f(x.bot,0)+' – '+f(x.top,0)+'</td>'+
+        '<td data-l="Интервал" class="dim">'+f(x.top,0)+' – '+f(x.bot,0)+'</td>'+
         '<td data-l="Вертикаль, м" class="dim">'+f(x.H,0)+'</td>'+
         '<td data-l="Δρ" class="dim">'+f(ro-x.ro,3)+'</td>'+
-        '<td data-l="Снижение, атм" class="calc">'+f(x.dP,2)+'</td></tr>').join('')
+        '<td data-l="Снижение" class="calc">'+f(x.dP,2)+'</td></tr>').join('')
       +'<tr><td data-l="Жидкость"><b>Итого</b></td><td data-l="Объём, м³" class="calc">'+
         f(lay.reduce((a,x)=>a+x.v,0))+'</td><td colspan="2"></td><td data-l="Δρ"></td>'+
-        '<td data-l="Снижение, атм" class="calc">'+f(dPtot,2)+'</td></tr>'
+        '<td data-l="Снижение" class="calc">'+f(dP1,2)+'</td></tr>'
     : '<tr><td colspan="6" style="text-align:center;color:var(--muted)">жидкости не заданы — расчёт идёт по расчётной ванне</td></tr>';
   const Vsum=seq.reduce((a,x)=>a+x.v,0);
   const oil=seq.filter(x=>/нефт/i.test(x.name)).reduce((a,x)=>a+x.v,0);
   const dOt=anyF?((oil>0?oil:Vsum)-Vzat):0;
   $('vnBigF').innerHTML=
-    '<div data-f="'+F('Снижение по факту','сумма вкладов всех жидкостей с их вертикалями и плотностями')+
-      '"><div class="l">Снижение по плану работ</div><div class="n">'+(anyF?f(dPtot,1):'—')+'<small> атм</small></div></div>'+
-    '<div><div class="l">Расчётное снижение</div><div class="n">'+f(dP1c,1)+'<small> атм</small></div></div>'+
+    '<div data-f="'+F('Снижение по плану работ','сумма вкладов всех жидкостей: (ρр − ρж) · 0,0981 · H')+
+      '"><div class="l">Снижение по плану работ</div><div class="n">'+(anyF?f(dP1,1):'—')+'<small> кгс/см²</small></div></div>'+
+    '<div data-f="'+F('Расчётное снижение','(ρр − ρн) · 0,0981 · ΔTVD ванны<br>('+f(ro,3)+' − '+f(roN,3)+') · 0,0981 · '+f(cBath.H,0)+' = '+f(dP1c,1))+
+      '"><div class="l">Расчётное снижение</div><div class="n">'+f(dP1c,1)+'<small> кгс/см²</small></div></div>'+
     '<div><div class="l">Всего жидкостей по плану</div><div class="n">'+(anyF?f(Vsum):'—')+'<small> м³</small></div></div>'+
     '<div><div class="l">Отклонение от расчёта</div><div class="n" style="color:'+(dOt>0?'var(--red)':'#FFD75E')+'">'+
       (anyF?((dOt>0?'+':'')+f(dOt)):'—')+'<small> м³</small></div></div>';
   let fw='';
+  if(anyF&&st1.over>0.01)fw+='<div class="warn err">Жидкостей больше, чем затрубного объёма до устья, на '+f(st1.over)+' м³.</div>';
   if(anyF&&oil>0&&Vzat>0&&oil>Vzat*1.05)
-    fw+='<div class="warn">Нефти по плану больше расчётной на '+f(oil-Vzat)+' м³ — ванна поднимется выше зоны прихвата, снижение вырастет.</div>';
+    fw+='<div class="warn">Нефти по плану больше расчётной на '+f(oil-Vzat)+' м³ — ванна поднимется выше расчётного верха, снижение вырастет.</div>';
   if(anyF&&oil>0&&Vzat>0&&oil<Vzat*0.95)
-    fw+='<div class="warn err">Нефти по плану меньше расчётной ('+f(oil)+' против '+f(Vzat)+' м³) — зона прихвата перекрыта не полностью.</div>';
+    fw+='<div class="warn">Нефти по плану меньше расчётной ('+f(oil)+' против '+f(Vzat)+' м³) — верх ванны встанет на '+
+      f(lay.length?lay[0].top:0,0)+' м вместо '+f(topV,0)+' м. Проверьте, что зона прихвата перекрыта.</div>';
   if(anyF&&seq.length>1)
     fw+='<div class="warn">Внизу, у зоны прихвата, окажется <b style="display:inline">'+seq[seq.length-1].name+
       '</b> — она закачивается последней. Нужна другая внизу — поменяйте порядок стрелками.</div>';
   $('vnFWarn').innerHTML=fw;
   $('vnResF').innerHTML= anyF
-    ? kv('Верх столба жидкостей, м по стволу',f(lay.length?lay[0].bot:0,0),
-        F('Верх столба','до какой глубины по стволу поднимутся жидкости'))+
-      kv('Суммарная вертикаль столба, м',f(lay.reduce((a,x)=>a+x.H,0),0),'')+
-      kv('Суммарное снижение, атм',f(dPtot,2),'')+
-      kv('Гидростатика после установки, атм',f(P1,1),F('После установки',f(P0,1)+' − '+f(dPtot,2)+' = '+f(P1,1)+' атм'))+
-      kv('Баланс к пласту, атм',(P1-ppl>0?'+':'')+f(P1-ppl,1),'')
+    ? kv('Верх столба жидкостей, м по стволу',f(lay.length?lay[0].top:0,0),F('Верх столба','до какой глубины по стволу поднимутся жидкости'))+
+      kv('Суммарная вертикаль столба, м',f(st1.H,0),'')+
+      kv('Суммарное снижение, кгс/см²',f(dP1,2),'')+
+      kv('Гидростатика после установки, кгс/см²',f(P1,1),F('После установки',f(P0,1)+' − '+f(dP1,2)+' = '+f(P1,1)))+
+      kv('Баланс к пласту, кгс/см²',(P1-ppl>0?'+':'')+f(P1-ppl,1),'')
     : '<div class="k">Добавьте жидкости в порядке закачки</div><div class="v">—</div>';
 
-  /* этапы */
-  const Lpod=q2>0?1000/q2:NaN;
-  const dP2=isFinite(Lpod)&&isFinite(cosA)?(ro-roN)*(Lpod*cosA)/10:NaN;
-  const P2=P1-(isFinite(dP2)?dP2:0);
-  const Vv=anyF?Vsum:Vzat;
-  const Lvym=q1>0?Vv*1000/q1:NaN;
-  const roAvg=anyF&&Vv>0?(seq.reduce((a,x)=>a+x.v*x.ro,0)/Vv):roN;
-  const dP3=isFinite(Lvym)?(ro-roAvg)*(Lvym*Math.min(1,Math.max(0,cosUp)))/10:NaN;
-  const P3=P0-(isFinite(dP3)?dP3:0);
+  /* ---- этапы ---- */
+  /* подкачки: запас нефти из труб выходит в затруб последним и встаёт внизу */
+  const list2=(zap>0?[{name:'Нефть из труб',v:zap,ro:roN}]:[]).concat(base.slice().reverse());
+  const st2=col(list2,bottom), P2=P0-st2.dP;
+  /* вымыв: столб поднимается по затрубу, ищем положение с наибольшим снижением */
+  let worst={dP:st2.dP,top:st2.top,bot:bottom};
+  const step=Math.max(5,bottom/400);
+  for(let b=bottom-step;b>0;b-=step){const c=col(list2,b);if(c.over>0.001)break;if(c.dP>worst.dP)worst={dP:c.dP,top:c.top,bot:b};}
+  const P3=P0-worst.dP;
   const bal=v=>v-ppl, ust=v=>Math.max(0,ppl-v);
   $('vnBig2').innerHTML=
-    '<div data-f="'+F('Гидростатика до ванны','ρ · TVD / 10<br>'+f(ro,3)+' · '+f(tvdS,0)+' / 10 = '+f(P0)+' атм')+
-      '"><div class="l">Гидростатика до ванны</div><div class="n">'+f(P0,1)+'<small> атм</small></div></div>'+
-    '<div data-f="'+F('Запас к пласту',f(P0)+' − '+f(ppl,0)+' = '+f(rep0)+' атм')+
-      '"><div class="l">Запас к пласту</div><div class="n" style="color:'+(rep0<0?'var(--red)':'#FFD75E')+'">'+f(rep0,1)+'<small> атм</small></div></div>'+
-    '<div><div class="l">Снижение '+(anyF?'по плану работ':'от ванны')+'</div><div class="n">'+f(dP1,1)+'<small> атм</small></div></div>'+
-    '<div data-f="'+F('MAASP','(ρЭГР − ρраств) · TVD башмака / 10 = '+f(maasp,1)+' атм')+
-      '"><div class="l">MAASP</div><div class="n">'+f(maasp,1)+'<small> атм</small></div></div>';
+    '<div data-f="'+F('Гидростатика до ванны','ρ · 0,0981 · TVD<br>'+f(ro,3)+' · 0,0981 · '+f(tvd(bottom),0)+' = '+f(P0,1)+' кгс/см²')+
+      '"><div class="l">Гидростатика до ванны</div><div class="n">'+f(P0,1)+'<small> кгс/см²</small></div></div>'+
+    '<div data-f="'+F('Запас к пласту',f(P0,1)+' − '+f(ppl,0)+' = '+f(rep0,1)+' кгс/см²')+
+      '"><div class="l">Запас к пласту</div><div class="n" style="color:'+(rep0<0?'var(--red)':'#FFD75E')+'">'+f(rep0,1)+'<small> кгс/см²</small></div></div>'+
+    '<div><div class="l">Снижение '+(anyF?'по плану работ':'от ванны')+'</div><div class="n">'+f(dP1,1)+'<small> кгс/см²</small></div></div>'+
+    '<div data-f="'+F('Минимум при вымыве','столб ванны с запасом из труб в самом вертикальном положении:<br>'+f(worst.top,0)+' – '+f(worst.bot,0)+' м по стволу')+
+      '"><div class="l">Минимум при вымыве</div><div class="n" style="color:'+(bal(P3)<0?'var(--red)':'#FFD75E')+'">'+f(P3,1)+'<small> кгс/см²</small></div></div>';
   const pr=(nm,P)=>'<tr><td data-l="Этап">'+nm+'</td><td data-l="Гидростатика" class="calc">'+(isFinite(P)?f(P,1):'—')+'</td>'+
     '<td data-l="Пласт" class="dim">'+f(ppl,0)+'</td><td data-l="Баланс" class="calc" style="color:'+
       (bal(P)<0?'var(--red)':'var(--green)')+'">'+(isFinite(P)?((bal(P)>0?'+':'')+f(bal(P),1)):'—')+'</td>'+
     '<td data-l="Устье" class="calc">'+(isFinite(P)?f(ust(P),1):'—')+'</td></tr>';
   $('tblVnP').querySelector('tbody').innerHTML=
-    pr('До ванны',P0)+pr('Установка'+(anyF?' (по плану работ)':''),P1)+pr('После подкачки 1 м³',P2)+pr('Вымыв',P3);
+    pr('До ванны',P0)+pr('Установка'+(anyF?' (по плану работ)':''),P1)+
+    pr('После подкачек (запас '+f(zap)+' м³ из труб в затрубе)',P2)+
+    pr('Вымыв — худшее положение столба',P3);
+  const dTVD=cBath.H, cosA=Lv>0?dTVD/Lv:NaN;
+  const ang=isFinite(cosA)?Math.acos(Math.max(-1,Math.min(1,cosA)))*180/Math.PI:NaN;
   $('vnRes3').innerHTML='<div class="hd">Наклон участка ванны</div>'+
+    kv('Интервал ванны по стволу, м',f(topV,0)+' – '+f(bottom,0),'')+
     kv('Длина ванны по стволу, м',f(Lv,0),'')+
-    kv('Прирост по вертикали, м',f(dTVD,0),F('ΔTVD',f(tvdS,0)+' − '+f(tvdO,0)+' = '+f(dTVD,0)+' м'))+
-    kv('Косинус зенитного угла',f(cosA,3),F('Косинус','ΔTVD / длина по стволу'))+
-    kv('Средний зенитный угол, °',f(ang,0),'')+
-    kv('Снижение при вымыве, атм',f(dP3,1),F('Вымыв','жидкости поднимаются в более вертикальную часть — снижение больше'));
+    kv('Высота по вертикали, м',f(dTVD,0),F('ΔTVD',f(tvd(bottom),0)+' − '+f(tvd(topV),0)+' = '+f(dTVD,0)+' м'))+
+    kv('Средний зенитный угол, °',f(ang,0),F('Угол','arccos(ΔTVD / длина по стволу)'))+
+    kv('Снижение при вымыве (макс.), кгс/см²',f(worst.dP,1),F('Вымыв','столб поднимается в более вертикальную часть — снижение растёт'));
   let w='';
   if(rep0<0&&ppl>0)w+='<div class="warn err">Гидростатика ниже пластового ещё до ванны — операция недопустима без утяжеления.</div>';
-  if(isFinite(P1)&&bal(P1)<0)w+='<div class="warn err">После установки баланс отрицательный — требуется противодавление на устье '+f(ust(P1),1)+' атм.</div>';
-  if(isFinite(P3)&&bal(P3)<0)w+='<div class="warn">При вымыве недобаланс '+f(-bal(P3),1)+' атм — превентор закрывают ДО начала вымыва.</div>';
-  if(isFinite(maasp)&&isFinite(P3)&&ust(P3)>maasp&&maasp>0)
-    w+='<div class="warn err">Требуемое устьевое давление выше MAASP ('+f(maasp,1)+' атм) — риск гидроразрыва у башмака.</div>';
-  if(isFinite(dP2)&&rep0-dP1-dP2<0)w+='<div class="warn">Подкачка 1 м³ уводит баланс в минус — подкачки недопустимы.</div>';
+  if(ppl>0&&bal(P1)<0)w+='<div class="warn err">После установки баланс отрицательный — требуется противодавление на устье '+f(ust(P1),1)+' кгс/см².</div>';
+  if(ppl>0&&zap>0&&bal(P1)>=0&&bal(P2)<0)w+='<div class="warn">Подкачка запаса из труб уводит баланс в минус — подкачки недопустимы без противодавления.</div>';
+  if(ppl>0&&bal(P3)<0)w+='<div class="warn">При вымыве недобаланс '+f(-bal(P3),1)+' кгс/см² — превентор закрывают ДО начала вымыва, вымыв ведут через дроссель.</div>';
   $('vnWarn').innerHTML=w;
 
-  /* полимерка на равновесие */
-  const budget=rep0-dP1c, dRoP=ro-roP;
-  const calcP=(reserve)=>{
+  /* ---- полимерка на равновесие над расчётной ванной ---- */
+  const budget=rep0-dP1c, dRoP=ro-roP, topB=cBath.top;
+  const calcP=reserve=>{
     const av=budget-reserve;
-    if(!(av>0)||!(dRoP>0))return null;
-    const H=av*10/dRoP, cu=cosUp>0?cosUp:1, L=H/cu;
-    const Lz2=Math.max(0,okno-hvTop), low=Math.min(L,Lz2), up=Math.max(0,L-Lz2);
-    return{av:av,H:H,cu:cu,L:L,V:(q2*low+q1*up)/1000,low:low,up:up};
+    if(!(av>0)||!(dRoP>0)||!(topB>0))return null;
+    const H=av/(dRoP*GK), tTop=tvd(topB);
+    let x=0, lim=false;
+    if(tTop<=H){x=0;lim=true;}
+    else{let lo=0,hi=topB;for(let i=0;i<60;i++){const m=(lo+hi)/2;if(tTop-tvd(m)>H)lo=m;else hi=m;}x=(lo+hi)/2;}
+    return{av:av,H:H,x:x,L:topB-x,V:volBetween(x,topB),lim:lim};
   };
   const eq=calcP(0), rr=calcP(rez);
   $('vnBig3').innerHTML=
-    '<div data-f="'+F('Бюджет снижения','запас к пласту − снижение от расчётной нефти<br>'+f(rep0)+' − '+f(dP1c)+' = '+f(budget)+' атм')+
-      '"><div class="l">Остаток на полимерку</div><div class="n">'+f(budget,1)+'<small> атм</small></div></div>'+
-    (eq?'<div data-f="'+F('На точное равновесие','H = ΔP · 10 / Δρ = '+f(eq.H,0)+' м; по стволу '+f(eq.L,0)+' м')+
+    '<div data-f="'+F('Бюджет снижения','запас к пласту − снижение от расчётной ванны<br>'+f(rep0,1)+' − '+f(dP1c,1)+' = '+f(budget,1)+' кгс/см²')+
+      '"><div class="l">Остаток на полимерку</div><div class="n">'+f(budget,1)+'<small> кгс/см²</small></div></div>'+
+    (eq?'<div data-f="'+F('На точное равновесие','H = ΔP / (Δρ · 0,0981) = '+f(eq.H,0)+' м по вертикали; по стволу '+f(eq.L,0)+' м')+
       '"><div class="l">На точное равновесие</div><div class="n">'+f(eq.V)+'<small> м³</small></div></div>':'')+
-    (rr?'<div><div class="l">С запасом '+f(rez,0)+' атм</div><div class="n">'+f(rr.V)+'<small> м³</small></div></div>':'');
+    (rr?'<div><div class="l">С запасом '+f(rez,0)+' кгс/см²</div><div class="n">'+f(rr.V)+'<small> м³</small></div></div>':'');
   $('vnRes4').innerHTML= eq?
-    kv('Допустимое снижение от полимерки, атм',f(eq.av),'')+
-    kv('Высота по вертикали, м',f(eq.H,0),F('Высота','H = ΔP · 10 / Δρ'))+
-    kv('Косинус участка',f(eq.cu,3),'')+
-    kv('Длина по стволу, м',f(eq.L,0),F('Длина','L = H / cos α'))+
+    kv('Допустимое снижение от полимерки, кгс/см²',f(eq.av,1),'')+
+    kv('Высота по вертикали, м',f(eq.H,0),F('Высота','H = ΔP / (Δρ · 0,0981)'))+
+    kv('Интервал над ванной по стволу, м',f(eq.x,0)+' – '+f(topB,0),'')+
     kv('Итого на равновесие, м³',f(eq.V),'')+
-    (rr?kv('Рекомендуемый объём с запасом, м³',f(rr.V),''):'')
-    :'<div class="k">Заполните плотности и давления</div><div class="v">—</div>';
+    (rr?kv('Рекомендуемый объём с запасом, м³',f(rr.V),''):'')+
+    (eq.lim?'<div class="k" style="color:var(--yellow)">Полимерка доходит до устья — ограничения по равновесию нет</div><div class="v"></div>':'')
+    :'<div class="k">Заполните плотности и давления — или запаса к пласту на полимерку нет</div><div class="v">—</div>';
 }
 
 /* ======== прихваты ======== */
@@ -3346,7 +3481,8 @@ function collect(){
     cas:rowsOf('tblCas',['nm','t','d','L']),
     open:rowsOf('tblOpen',['d','L','k']),
     npv:rowsOf('tblNpv',['nm','a','b']),
-    stuck:{q1:STUCK.q1,q2:STUCK.q2,q3:STUCK.q3,q4:STUCK.q4}};
+    stuck:{q1:STUCK.q1,q2:STUCK.q2,q3:STUCK.q3,q4:STUCK.q4},
+    vn:vnCollect()};
 }
 function saveLocal(){
   try{
@@ -3378,6 +3514,7 @@ function restoreLocal(){
         box.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b.dataset.v===STUCK[q]));
       });
     }
+    if(d.vn)vnRestore(d.vn);else calcVanna();
     setMode();safeCalc();calcDol();calcPress();calcHydro();calcMud();calcCem();calcSov();calcNpv();calcStuck();
     const el=$('navStyle');if(el)setNav(el.value);
     $('saveInfo').textContent='Данные восстановлены';
