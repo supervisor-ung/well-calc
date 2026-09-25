@@ -360,7 +360,7 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
   </svg>
   <div>
     <h1>Памятка бурового супервайзера</h1>
-    <div class="sub">Объёмы · цементаж · буровой раствор · аварийность · v3.2</div>
+    <div class="sub">Объёмы · цементаж · буровой раствор · аварийность · v3.3</div>
   </div>
   <div class="spacer"></div>
   <div class="hbtns">
@@ -646,6 +646,50 @@ input.bad,select.bad{box-shadow:inset 4px 4px 9px var(--sh-d),inset -4px -4px 9p
   </div>
 
   
+  <div class="panel">
+    <h2>Режим течения: ламинарный или турбулентный
+      <span style="flex:1"></span>
+      <button class="btn sm" onclick="pullFlow()">Взять из расчёта</button>
+      <button class="btn sm" onclick="addFlow()">+ Интервал</button>
+      <button class="btn sm danger" onclick="$('tblFlow').querySelector('tbody').innerHTML='';calcFlow()">Очистить</button>
+    </h2>
+    <div class="body">
+      <div class="grid4">
+        <label class="f"><span>Жидкость</span>
+          <select id="fl_model" onchange="calcFlow()">
+            <option value="mud">Буровой раствор (Бингам + степенная API)</option>
+            <option value="newt">Вода, рассол, буфер (ньютоновская)</option>
+          </select></label>
+        <label class="f"><span>Подача, л/с</span><input id="fl_q" inputmode="decimal" oninput="calcFlow()"></label>
+        <label class="f"><span>Плотность, г/см³</span><input id="fl_ro" inputmode="decimal" oninput="calcFlow()"></label>
+        <label class="f"><span>Вязкость ньютоновской жидкости, мПа·с</span><input id="fl_mu" value="1" inputmode="decimal" oninput="calcFlow()"></label>
+      </div>
+      <div class="grid4" id="flRheo">
+        <label class="f"><span>θ600, град</span><input id="fl_600" inputmode="decimal" oninput="calcFlow()"></label>
+        <label class="f"><span>θ300, град</span><input id="fl_300" inputmode="decimal" oninput="calcFlow()"></label>
+        <label class="f"><span>θ100, град (для затруба, необяз.)</span><input id="fl_100" inputmode="decimal" oninput="calcFlow()"></label>
+        <label class="f"><span>θ3, град (для затруба, необяз.)</span><input id="fl_3" inputmode="decimal" oninput="calcFlow()"></label>
+      </div>
+      <div id="flWarn"></div>
+      <div class="res" id="flRes" style="margin-bottom:14px"></div>
+      <div class="tscroll">
+        <table class="cards" id="tblFlow">
+          <thead><tr><th style="min-width:150px">Интервал</th><th style="min-width:130px">Где течёт</th><th>D, мм<br>(Dвн трубы / ствола)</th><th>d, мм<br>(Dнар трубы)</th>
+            <th>v, м/с</th><th>Dг, мм</th><th>Re / Reкр<br>Бингам</th><th>Режим<br>Бингам</th><th>n · Re<br>API</th><th>Режим<br>API</th><th>Qкр ламинара<br>л/с</th><th class="act"></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="hint">«Взять из расчёта» строит интервалы по компоновке с вкладки «Промывка и продавка»: внутри каждой секции,
+        затруб в колонне и затруб в открытом стволе (по номинальному Ø долота). Наведите курсор на число — покажется формула с подстановкой.</p>
+      <p class="hint formula">v = 1273 · Q / (D² − d²) · Dг = D − d (в трубах Dг = Dвн) · Re = ρ · v · Dг / μэф<br>
+        Бингам: η = θ600 − θ300 · τ0 = 0,4788 · (2θ300 − θ600) · μэф = η + τ0 · Dг / (6v) в трубах, / (8v) в затрубе · He = ρ · τ0 · Dг² / η² · Reкр = 2100 + 7,3 · He^0,58<br>
+        Степенная (API RP 13D): n = 3,32 · lg(θ600/θ300) · K = 0,511 · θ300 / 511ⁿ · в затрубе при θ100 и θ3: n = 0,657 · lg(θ100/θ3), K = 0,511 · θ100 / 170,2ⁿ<br>
+        μэф = K · (8v/d)^(n−1) · ((3n+1)/4n)ⁿ в трубах, K · (12v/Dг)^(n−1) · ((2n+1)/3n)ⁿ в затрубе · ламинар при Re &lt; 3470 − 1370n, турбулентный при Re &gt; 4270 − 1370n</p>
+      <p class="hint">Против открытого ствола обычно держат ламинарный режим, чтобы не размывать стенки; для турбулизации буфера при цементаже считайте его как ньютоновскую жидкость.
+        Бингам при высоком ДНС завышает Reкр и может показать «ламинар» даже в трубах — для решений ориентируйтесь на столбец API.</p>
+    </div>
+  </div>
+
 </section>
 
 <section class="tab" id="tab-mud">
@@ -3328,6 +3372,134 @@ function calcHydro(){
 
 }
 
+/* ======== режим течения ======== */
+function addFlow(nm,kind,D,d){
+  const tr=document.createElement('tr');
+  const e=v=>String(v==null?'':v).replace(/"/g,'&quot;');
+  tr.innerHTML=
+    '<td data-l="Интервал"><input class="nm" value="'+e(nm)+'" placeholder="например: затруб СБТ в ОС" oninput="calcFlow()"></td>'+
+    '<td data-l="Где течёт"><select class="kind" onchange="calcFlow()"><option value="pipe"'+(kind==='pipe'?' selected':'')+'>Внутри труб</option>'+
+      '<option value="ann"'+(kind!=='pipe'?' selected':'')+'>Затруб</option></select></td>'+
+    '<td data-l="D ствола / Dвн, мм"><input class="D" value="'+e(D)+'" inputmode="decimal" oninput="calcFlow()"></td>'+
+    '<td data-l="Dнар трубы, мм"><input class="d" value="'+e(d)+'" inputmode="decimal" oninput="calcFlow()"></td>'+
+    '<td data-l="v, м/с" class="calc fv">—</td><td data-l="Dг, мм" class="dim fdg">—</td>'+
+    '<td data-l="Re / Reкр Бингам" class="calc freb">—</td><td data-l="Режим Бингам" class="frgb">—</td>'+
+    '<td data-l="n · Re API" class="calc frep">—</td><td data-l="Режим API" class="frgp">—</td>'+
+    '<td data-l="Qкр ламинара, л/с" class="calc fqk">—</td>'+
+    '<td class="act"><button class="btn xs danger" onclick="this.closest(\'tr\').remove();calcFlow()">✕</button></td>';
+  $('tblFlow').querySelector('tbody').appendChild(tr);calcFlow();
+}
+function pullFlow(){
+  const g=id=>($(id)&&$(id).value||'').trim();
+  if(g('podacha'))$('fl_q').value=g('podacha');
+  const ro=g('h_ro')||g('m_r1'); if(ro)$('fl_ro').value=ro;
+  [['m_600','fl_600'],['m_300','fl_300']].forEach(p=>{if(g(p[0]))$(p[1]).value=g(p[0]);});
+  const c=$('tblCas').querySelectorAll('tbody tr');
+  let casIn=0;
+  if(c.length){const l=c[c.length-1];casIn=num(l.querySelector('.d').value)-2*num(l.querySelector('.t').value);}
+  const o=$('tblOpen').querySelector('tbody tr');
+  const bit=o?num(o.querySelector('.d').value):0;
+  const rows=[],seen={};
+  const push=(nm,k,D,d)=>{const key=k+'|'+fmt(D,1)+'|'+fmt(d,1);if(seen[key]||!(D>0))return;seen[key]=1;rows.push([nm,k,fmt(D,1),d>0?fmt(d,1):'']);};
+  $('tblTool').querySelectorAll('tbody tr').forEach(tr=>{
+    const nm=(tr.querySelector('.nm').value||'секция').trim();
+    const t=num(tr.querySelector('.t').value),d=num(tr.querySelector('.d').value);
+    const lc=num(tr.querySelector('.lc').value),lo=num(tr.querySelector('.lo').value);
+    if(!(d>0))return;
+    push('Внутри '+nm,'pipe',d-2*t,0);
+    if(lc>0&&casIn>d)push('Затруб в колонне: '+nm,'ann',casIn,d);
+    if(lo>0&&bit>d)push('Затруб в открытом стволе: '+nm,'ann',bit,d);
+  });
+  if(!rows.length){alert('На вкладке «Промывка и продавка» не заполнена компоновка — интервалы взять неоткуда.');calcFlow();return;}
+  $('tblFlow').querySelector('tbody').innerHTML='';
+  rows.forEach(r=>addFlow(r[0],r[1],r[2],r[3]));
+  calcFlow();
+}
+function flRg(re,lam,tur){
+  if(!isFinite(re))return '—';
+  if(re<lam)return '<span style="color:var(--green);font-weight:700">ламинарный</span>';
+  if(tur!==undefined&&re<tur)return '<span style="color:var(--yellow);font-weight:700">переходный</span>';
+  return '<span style="color:var(--red);font-weight:700">турбулентный</span>';
+}
+function calcFlow(){
+  if(!$('tblFlow'))return;
+  const newt=$('fl_model').value==='newt';
+  $('flRheo').style.display=newt?'none':'';
+  const Q=num($('fl_q').value),ro=num($('fl_ro').value),RO=ro*1000,muN=num($('fl_mu').value)/1000;
+  const t6=num($('fl_600').value),t3=num($('fl_300').value),t1=num($('fl_100').value),tg=num($('fl_3').value);
+  const eta=(t6-t3)/1000, tau=0.4788*(2*t3-t6);
+  const n=(t6>0&&t3>0)?3.32*Math.log10(t6/t3):NaN, K=isFinite(n)?0.511*t3/Math.pow(511,n):NaN;
+  const hasA=t1>0&&tg>0&&t1>tg;
+  const na=hasA?0.657*Math.log10(t1/tg):n, Ka=hasA?0.511*t1/Math.pow(170.2,na):K;
+  const kv=(t,v,f)=>'<div class="k"'+(f?' data-f="'+f+'"':'')+'>'+t+'</div><div class="v"'+(f?' data-f="'+f+'"':'')+'>'+v+'</div>';
+  let w='';
+  if(!newt){
+    if(t6>0&&t3>0&&t6<=t3)w+='<div class="warn err">θ600 должно быть больше θ300 — проверьте показания вискозиметра.</div>';
+    if(t6>0&&t3>0&&tau<0)w+='<div class="warn">ДНС получается отрицательным (2θ300 &lt; θ600) — для Бингама берётся τ0 = 0.</div>';
+    if((t1>0)!==(tg>0))w+='<div class="warn">Для затрубной степенной модели нужны оба показания — θ100 и θ3. Пока берутся n и K по θ600/θ300.</div>';
+  }
+  $('flWarn').innerHTML=w;
+  const tau0=Math.max(0,tau);
+  $('flRes').innerHTML=newt
+    ? '<div class="hd">Ньютоновская жидкость</div>'+kv('Вязкость, мПа·с',fmt(muN*1000,2),'')+
+      kv('Границы режима','Re &lt; 2100 ламинар · Re &gt; 3000 турбулент','')
+    : '<div class="hd">Реология</div>'+
+      kv('Пластическая вязкость η, мПа·с',fmt(eta*1000,1),F('η','θ600 − θ300 = '+n2(t6,1)+' − '+n2(t3,1)+' = '+n2(eta*1000,1)+' мПа·с'))+
+      kv('ДНС τ0, Па',fmt(tau0,2),F('τ0','0,4788 · (2θ300 − θ600) = 0,4788 · (2 · '+n2(t3,1)+' − '+n2(t6,1)+') = '+n2(tau,2)+' Па'))+
+      kv('n / K в трубах, Па·сⁿ',fmt(n,3)+' / '+fmt(K,3),F('Степенная модель','n = 3,32 · lg('+n2(t6,1)+' / '+n2(t3,1)+') = '+n2(n,3)+'<br>K = 0,511 · '+n2(t3,1)+' / 511^'+n2(n,3)+' = '+n2(K,3)+' Па·сⁿ'))+
+      kv('n / K в затрубе, Па·сⁿ',fmt(na,3)+' / '+fmt(Ka,3),F('Затруб',hasA?'n = 0,657 · lg('+n2(t1,1)+' / '+n2(tg,1)+') = '+n2(na,3)+'<br>K = 0,511 · '+n2(t1,1)+' / 170,2^'+n2(na,3)+' = '+n2(Ka,3)+' Па·сⁿ':'θ100 и θ3 не заданы — берутся n и K по θ600/θ300'));
+
+  $('tblFlow').querySelectorAll('tbody tr').forEach(tr=>{
+    const pipe=tr.querySelector('.kind').value==='pipe';
+    const D=num(tr.querySelector('.D').value),d=pipe?0:num(tr.querySelector('.d').value);
+    tr.querySelector('.d').disabled=pipe;
+    const set=(c,h,f)=>{const el=tr.querySelector('.'+c);el.innerHTML=h;if(f)el.dataset.f=f;else delete el.dataset.f;};
+    const A=0.785*(D*D-d*d)/1e6, Dh=(D-d)/1000;
+    if(!(Q>0&&RO>0&&D>d&&A>0)){['fv','fdg','freb','frgb','frep','frgp','fqk'].forEach(c=>set(c,'—'));
+      if(D>0&&d>=D)set('fv','<span style="color:var(--red)">d ≥ D</span>');return;}
+    const v=Q/1000/A;
+    set('fv',fmt(v,2),F('Скорость','1273 · Q / (D² − d²)<br>1273 · '+n2(Q,1)+' / ('+n2(D,1)+'² − '+n2(d,1)+'²) = '+n2(v,2)+' м/с'));
+    set('fdg',fmt(Dh*1000,1),F('Гидравлический диаметр',pipe?'в трубах Dг = Dвн = '+n2(D,1)+' мм':'D − d = '+n2(D,1)+' − '+n2(d,1)+' = '+n2(Dh*1000,1)+' мм'));
+    if(newt){
+      const re=muN>0?RO*v*Dh/muN:NaN, qk=muN>0?2100*muN/(RO*Dh)*A*1000:NaN;
+      set('freb',fmt(re,0)+' / 2100',F('Число Рейнольдса','ρ · v · Dг / μ = '+n2(RO,0)+' · '+n2(v,2)+' · '+n2(Dh,4)+' / '+n2(muN,4)+' = '+n2(re,0)));
+      set('frgb',flRg(re,2100,3000));set('frep','—');set('frgp','—');
+      set('fqk',fmt(qk,1),F('Критическая подача','подача, при которой Re = 2100:<br>2100 · μ / (ρ · Dг) · площадь = '+n2(qk,1)+' л/с'));
+      return;
+    }
+    /* Бингам */
+    const c=pipe?6:8;
+    let reB=NaN,rkB=NaN,qkB=NaN;
+    if(eta>0){
+      const mue=eta+tau0*Dh/(c*v);
+      reB=RO*v*Dh/mue;
+      const He=RO*tau0*Dh*Dh/(eta*eta);
+      rkB=2100+7.3*Math.pow(He,0.58);
+      const vk=(rkB*eta+Math.sqrt(Math.pow(rkB*eta,2)+4*RO*Dh*rkB*tau0*Dh/c))/(2*RO*Dh);
+      qkB=vk*A*1000;
+      set('freb',fmt(reB,0)+' / '+fmt(rkB,0),F('Бингам','μэф = η + τ0 · Dг / ('+c+'v) = '+n2(eta,4)+' + '+n2(tau0,2)+' · '+n2(Dh,4)+' / ('+c+' · '+n2(v,2)+') = '+n2(mue,4)+' Па·с<br>'+
+        'Re = ρ · v · Dг / μэф = '+n2(RO,0)+' · '+n2(v,2)+' · '+n2(Dh,4)+' / '+n2(mue,4)+' = '+n2(reB,0)+'<br>'+
+        'He = ρ · τ0 · Dг² / η² = '+n2(He,0)+'<br>Reкр = 2100 + 7,3 · He^0,58 = '+n2(rkB,0)+'<br>критическая подача по Бингаму ≈ '+n2(qkB,1)+' л/с'));
+      set('frgb',flRg(reB,rkB));
+    }else{set('freb','—');set('frgb','—');}
+    /* степенная API */
+    const nn=pipe?n:na, KK=pipe?K:Ka;
+    if(nn>0&&KK>0){
+      const a=pipe?8:12, b=pipe?(3*nn+1)/(4*nn):(2*nn+1)/(3*nn);
+      const mue=KK*Math.pow(a*v/Dh,nn-1)*Math.pow(b,nn);
+      const re=RO*v*Dh/mue, L=3470-1370*nn, T=4270-1370*nn;
+      const vk=Math.pow(L*KK*Math.pow(a,nn-1)*Math.pow(b,nn)/(RO*Math.pow(Dh,nn)),1/(2-nn));
+      const qk=vk*A*1000;
+      set('frep',fmt(nn,2)+' · '+fmt(re,0),F('Степенная модель API','μэф = K · ('+a+'v / Dг)^(n−1) · (('+(pipe?'3n+1)/4n':'2n+1)/3n')+')ⁿ = '+n2(mue,4)+' Па·с<br>'+
+        'Re = '+n2(RO,0)+' · '+n2(v,2)+' · '+n2(Dh,4)+' / '+n2(mue,4)+' = '+n2(re,0)+'<br>'+
+        'ламинар до 3470 − 1370 · '+n2(nn,3)+' = '+n2(L,0)+'<br>турбулентный от 4270 − 1370 · '+n2(nn,3)+' = '+n2(T,0)));
+      set('frgp',flRg(re,L,T));
+      set('fqk',fmt(qk,1),F('Критическая подача (API)','подача, при которой Re = '+n2(L,0)+' — граница ламинарного режима<br>'+
+        'v кр = '+n2(vk,2)+' м/с → Q кр = '+n2(qk,1)+' л/с'+(isFinite(qkB)?'<br>по Бингаму: '+n2(qkB,1)+' л/с':'')));
+    }else{set('frep','—');set('frgp','—');set('fqk',isFinite(qkB)?fmt(qkB,1):'—');}
+  });
+}
+
 /* ======== пересчёт единиц ======== */
 function conv(src){
   const g=id=>num($(id).value),set=(id,v)=>{if($(id)!==document.activeElement)$(id).value=isFinite(v)&&v!==0?fmt(v,4):'';};
@@ -3482,6 +3654,7 @@ function collect(){
     cas:rowsOf('tblCas',['nm','t','d','L']),
     open:rowsOf('tblOpen',['d','L','k']),
     npv:rowsOf('tblNpv',['nm','a','b']),
+    flow:rowsOf('tblFlow',['nm','kind','D','d']),
     stuck:{q1:STUCK.q1,q2:STUCK.q2,q3:STUCK.q3,q4:STUCK.q4},
     vn:vnCollect()};
 }
@@ -3507,6 +3680,7 @@ function restoreLocal(){
     (d.cas||[]).forEach(r=>addCas(r.nm,r.t,r.d,r.L));
     (d.open||[]).forEach(r=>addOpen(r.d,r.L,r.k));
     (d.npv||[]).forEach(r=>addNpv(r.nm,r.a,r.b));
+    if(d.flow){$('tblFlow').querySelector('tbody').innerHTML='';d.flow.forEach(r=>addFlow(r.nm,r.kind,r.D,r.d));}
     Object.keys(d.fields||{}).forEach(id=>{const el=$(id);if(el&&el.type!=='file')el.value=d.fields[id];});
     if(d.stuck){
       ['q1','q2','q3','q4'].forEach(q=>{
@@ -3516,7 +3690,7 @@ function restoreLocal(){
       });
     }
     if(d.vn)vnRestore(d.vn);else calcVanna();
-    setMode();safeCalc();calcDol();calcPress();calcHydro();calcMud();calcCem();calcSov();calcNpv();calcStuck();
+    setMode();safeCalc();calcDol();calcPress();calcHydro();calcMud();calcCem();calcSov();calcNpv();calcStuck();calcFlow();
     const el=$('navStyle');if(el)setNav(el.value);
     $('saveInfo').textContent='Данные восстановлены';
     setTimeout(function(){$('saveInfo').textContent='';},5000);
@@ -3541,6 +3715,7 @@ const dl=document.createElement('datalist');dl.id='bitlist';
 dl.innerHTML=BITS.map(b=>'<option value="'+b+'">').join('');document.body.appendChild(dl);
 loadPreset('zbs');
 buildTabs();initStuck();initVanna();vnDrawF();calcVanna();calcRope();calcCem();calcSov();safeCalc();calcDol();calcPress();buildRef();calcHydro();calcMud();registerSW();
+addFlow();
 restoreLocal();
 addNpv();calcDrill();
 </script>
