@@ -1,6 +1,6 @@
 /* Памятка бурового супервайзера — офлайн-режим
    При каждом обновлении index.html меняйте номер в CACHE — старый кэш удалится сам. */
-const CACHE = 'well-calc-v33';
+const CACHE = 'well-calc-v34';
 const FILES = [
   './',
   './index.html',
@@ -20,7 +20,7 @@ self.addEventListener('install', e => {
   );
 });
 
-/* активация: удаляем все старые кэши, в том числе well-calc-v31 */
+/* активация: удаляем все старые кэши, в том числе well-calc-v33 */
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
